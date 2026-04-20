@@ -1,28 +1,34 @@
-
 from PySide6.QtWidgets import (
-    QLineEdit, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
+    QLineEdit, QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
+    QTableWidget, QTableWidgetItem, QHeaderView
 )
 from PySide6.QtGui import QColor, Qt
-
 from main.python.Views.colors import COLORS
 from main.python.Views.utils import Panel
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  VISTA: Historial de exploraciones
+#  Tabla de pacientes del lote con buscador y filtros por tipo de densidad.
+#
+#  ESTRUCTURA VISUAL:
+#    ┌──────────────────────────────────────────────────────┐
+#    │  [Buscador]  [Todos] [Tipo A] [Tipo B] [Tipo C] [Tipo D]  │
+#    ├──────────────────────────────────────────────────────┤
+#    │  ID Paciente │ Edad │ Densidad │ AGD │ Fecha │ Estado │
+#    │  ...         │ ...  │ ...      │ ... │ ...   │ ...    │
+#    └──────────────────────────────────────────────────────┘
+#
+#  ATRIBUTOS PÚBLICOS (conectar desde HistorialController):
+#    search_input          → QLineEdit: conectar .textChanged para filtrado en tiempo real
+#    filter_chips          → dict[str, QPushButton]: conectar .toggled por tipo
+#    table                 → QTableWidget: accesible si se necesita manipulación directa
+#
+#  MÉTODO DE DATOS:
+#    populate_table(rows)  → rellena la tabla con la lista de pacientes filtrada
+# ══════════════════════════════════════════════════════════════════════════════
+
 class ViewHistorial(QWidget):
-    """
-    Vista de historial de exploraciones.
-
-    DATOS NECESARIOS (populate_*)
-    ───────────────────────────────────────────────────────────────────────
-    populate_table(rows)   ← Rellena la tabla de pacientes
-
-    SEÑALES INTERNAS
-    ───────────────────────────────────────────────────────────────────────
-    El QLineEdit de búsqueda y los chips de filtro están expuestos como
-    atributos públicos para que el controller conecte sus señales:
-
-        view.search_input.textChanged.connect(ctrl.on_search)
-        view.filter_chips["Tipo A"].toggled.connect(ctrl.on_filter)
-    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -31,13 +37,19 @@ class ViewHistorial(QWidget):
         main.setContentsMargins(20, 20, 20, 20)
         main.setSpacing(16)
 
-        # ── Buscador + filtros ────────────────────────────────────────────
+        # ── SECCIÓN 1: Buscador y chips de filtro ─────────────────────────
+        # El buscador filtra por ID de paciente en tiempo real.
+        # Los chips de densidad filtran la tabla por tipo (A/B/C/D).
+        # Conectar desde HistorialController:
+        #   view.search_input.textChanged.connect(ctrl.on_search)
+        #   view.filter_chips["Tipo A"].toggled.connect(ctrl.on_filter_tipo_a)
         search_row = QWidget()
         search_row.setStyleSheet("background:transparent;")
         sr = QHBoxLayout(search_row)
         sr.setContentsMargins(0, 0, 0, 0)
         sr.setSpacing(10)
 
+        # Campo de búsqueda por ID de paciente
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Buscar paciente…")
         self.search_input.setFixedHeight(34)
@@ -48,13 +60,15 @@ class ViewHistorial(QWidget):
         )
         sr.addWidget(self.search_input, 1)
 
+        # Chips de filtro por tipo de densidad
+        # self.filter_chips["Todos"] está activo por defecto
         self.filter_chips = {}
         for filt in ["Todos", "Tipo A", "Tipo B", "Tipo C", "Tipo D"]:
             chip = QPushButton(filt)
             chip.setCheckable(True)
             chip.setFixedHeight(28)
             if filt == "Todos":
-                chip.setChecked(True)
+                chip.setChecked(True)   # "Todos" activo por defecto al arrancar
             chip.setStyleSheet(
                 f"QPushButton {{ background:transparent; border:0.5px solid rgba(0,0,0,0.18); "
                 "border-radius:99px; padding:0 10px; font-size:11px; "
@@ -67,7 +81,11 @@ class ViewHistorial(QWidget):
 
         main.addWidget(search_row)
 
-        # ── Tabla de exploraciones ────────────────────────────────────────
+        # ── SECCIÓN 2: Tabla de exploraciones recientes ───────────────────
+        # Tabla principal con una fila por paciente del lote.
+        # Las columnas son: ID, Edad, Densidad, AGD, Fecha, Estado.
+        # La columna Estado se colorea: azul=OK, amber=Revisar.
+        # Se rellena (y vacía/recarga) con populate_table(rows).
         table_panel = Panel("Exploraciones recientes")
         self.table = QTableWidget()
         self.table.setColumnCount(6)
@@ -85,10 +103,10 @@ class ViewHistorial(QWidget):
             "border-bottom:0.5px solid rgba(0,0,0,0.06); }}"
             f"QTableWidget::item:selected {{ background:{COLORS['blue_light']}; color:{COLORS['blue']}; }}"
         )
-        self.table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.verticalHeader().setVisible(False)
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)    # Selección de fila completa
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)     # Solo lectura
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)  # Columnas que se expanden
+        self.table.verticalHeader().setVisible(False)               # Sin numeración de filas
         self.table.setShowGrid(False)
         self.table.setAlternatingRowColors(False)
         self.table.setMinimumHeight(240)
@@ -96,29 +114,29 @@ class ViewHistorial(QWidget):
         main.addWidget(table_panel)
         main.addStretch()
 
-    # ── MÉTODO PÚBLICO ─────────────────────────────────────────────────────
+    # ══════════════════════════════════════════════════════════════════════
+    #  MÉTODOS DE DATOS — Llamar desde HistorialController
+    # ══════════════════════════════════════════════════════════════════════
+
     def populate_table(self, rows: list):
         """
-        Rellena la tabla de exploraciones.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Vacía la tabla y la rellena con los datos proporcionados.
+        Se llama tanto en la carga inicial como tras aplicar filtros/búsqueda.
 
-        Parámetros
-        ----------
-        rows : list de dicts
-            Claves: id, age, density, agd, date, status ("ok"|"revisar")
+        rows: list de dicts
+            Claves: id (str), age (int), density (str), agd (float), date (str),
+                    status ("ok" | "revisar")
 
-            Ejemplo:
-                rows = [
-                    {"id": "PAC-04821", "age": 52, "density": "A",
-                     "agd": 1.21, "date": "14 mar 2024", "status": "ok"},
-                    {"id": "PAC-04822", "age": 45, "density": "B",
-                     "agd": 1.67, "date": "14 mar 2024", "status": "ok"},
-                    {"id": "PAC-04823", "age": 58, "density": "C",
-                     "agd": 2.31, "date": "12 mar 2024", "status": "revisar"},
-                ]
-                view.populate_table(rows)
+        Ejemplo (carga inicial):
+            view.populate_table(historial_controller.get_all())
 
-        NOTA: Para búsqueda/filtrado conecta search_input y filter_chips
-        al controller y llama a populate_table() con los datos filtrados.
+        Ejemplo (tras filtro):
+            view.populate_table(historial_controller.filter_by_density("B"))
+
+        Flujo de filtrado recomendado:
+            1. Usuario escribe en search_input → controller filtra → llama populate_table()
+            2. Usuario activa chip "Tipo C"    → controller filtra → llama populate_table()
         """
         self.table.setRowCount(len(rows))
         for row_idx, r in enumerate(rows):
@@ -133,6 +151,7 @@ class ViewHistorial(QWidget):
             ]
             for col, item in enumerate(items):
                 item.setTextAlignment(Qt.AlignCenter)
+                # Colorear la columna Estado: azul=OK, amber=Revisar
                 if col == 5:
                     item.setForeground(
                         QColor(COLORS["blue"] if status == "ok" else COLORS["amber"])

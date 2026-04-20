@@ -1,34 +1,33 @@
-
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
-    QLabel,QGridLayout
+    QLabel, QGridLayout
 )
-
 from PySide6.QtGui import Qt
 from main.python.Views.colors import COLORS
 from main.python.Views.utils import BarChart, MetricCard, Panel, ProgressBar, label, separator
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  VISTA: Resumen del análisis
+#  Pantalla principal que muestra un resumen global del lote de pacientes.
+#
+#  ESTRUCTURA VISUAL:
+#    ┌─────────────────────────────────────────────────────┐
+#    │  [KPI] Pacientes  [KPI] Dosis  [KPI] Cruzados  [KPI] Desv. │
+#    ├──────────────────────────────┬──────────────────────┤
+#    │  Gráfico barras AGD          │  Estado del proceso  │
+#    │  Distribución por densidad   │  Alertas y avisos    │
+#    └──────────────────────────────┴──────────────────────┘
+#
+#  MÉTODOS DE DATOS (llamar desde ResumenController):
+#    populate_metrics(data)   → fila de 4 tarjetas KPI
+#    populate_chart(data)     → gráfico de barras AGD
+#    populate_density(data)   → barras de distribución por tipo
+#    populate_steps(steps)    → estado del pipeline
+#    populate_alerts(alerts)  → panel de alertas
+# ══════════════════════════════════════════════════════════════════════════════
+
 class ViewResumen(QWidget):
-    """
-    Vista principal de resumen.
-
-    DATOS NECESARIOS (populate_*)
-    ───────────────────────────────────────────────────────────────────────
-    populate_metrics(data)     ← 4 tarjetas de KPI superiores
-    populate_chart(data)       ← Gráfico de barras AGD por grupo
-    populate_density(data)     ← Barras de distribución por densidad
-    populate_steps(steps)      ← Estado del proceso (pipeline)
-    populate_alerts(alerts)    ← Alertas y avisos
-
-    CUÁNDO LLAMAR A ESTOS MÉTODOS
-    ───────────────────────────────────────────────────────────────────────
-    Desde MainWindow.__init__() o desde ResumenController tras cargar datos:
-
-        resumen_ctrl = ResumenController(db_session)
-        self.views["resumen"].populate_metrics(resumen_ctrl.get_metrics())
-        self.views["resumen"].populate_density(resumen_ctrl.get_density_distribution())
-        ...
-    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -37,47 +36,53 @@ class ViewResumen(QWidget):
         main.setContentsMargins(20, 20, 20, 20)
         main.setSpacing(16)
 
-        # ── Tarjetas métricas ─────────────────────────────────────────────
+        # ── SECCIÓN 1: Fila de tarjetas KPI ──────────────────────────────
+        # 4 tarjetas métricas en la parte superior: pacientes, dosis, cruzados, desviación.
+        # Se rellenan con populate_metrics(data) desde el controller.
         cards_row = QWidget()
         cards_row.setStyleSheet("background:transparent;")
         grid = QGridLayout(cards_row)
         grid.setSpacing(12)
         grid.setContentsMargins(0, 0, 0, 0)
 
-        # Tarjetas vacías — se rellenan con populate_metrics()
         metric_titles = [
-            "Pacientes totales",
-            "Dosis media (mGy)",
-            "Registros cruzados",
-            "Desviación estándar",
+            "Pacientes totales",    # Total de pacientes del lote
+            "Dosis media (mGy)",    # AGD media ponderada global
+            "Registros cruzados",   # Pacientes con match DICOM+RIS
+            "Desviación estándar",  # Dispersión de la dosis AGD
         ]
         self._metric_cards = []
         for i, title in enumerate(metric_titles):
-            card = MetricCard(title)
+            card = MetricCard(title)   # Arranca con "—", se rellena con populate_metrics()
             self._metric_cards.append(card)
             grid.addWidget(card, 0, i)
 
         main.addWidget(cards_row)
 
-        # ── Dos columnas ──────────────────────────────────────────────────
+        # ── SECCIÓN 2: Layout de dos columnas ────────────────────────────
+        # Columna izquierda (ancha): gráficos y distribución
+        # Columna derecha (fija 300px): estado del proceso y alertas
         two_col = QWidget()
         two_col.setStyleSheet("background:transparent;")
         tc = QHBoxLayout(two_col)
         tc.setContentsMargins(0, 0, 0, 0)
         tc.setSpacing(16)
 
-        # Columna izquierda
+        # ── COLUMNA IZQUIERDA ─────────────────────────────────────────────
         left = QWidget()
         left.setStyleSheet("background:transparent;")
         lv = QVBoxLayout(left)
         lv.setContentsMargins(0, 0, 0, 0)
         lv.setSpacing(16)
 
-        # Gráfico de barras
+        # Panel: Gráfico de barras AGD por grupo de densidad
+        # Muestra AGD media del año anterior vs. año actual para cada tipo A/B/C/D.
+        # Rellenar con: populate_chart(data) → delega en BarChart.set_data()
         chart_panel = Panel("Dosis media AGD por grupo de densidad (mGy)")
-        self._bar_chart = BarChart()
+        self._bar_chart = BarChart()   # Vacío hasta populate_chart()
         chart_panel.body().addWidget(self._bar_chart)
 
+        # Leyenda del gráfico de barras (año anterior / año actual)
         leg = QWidget()
         leg.setStyleSheet("background:transparent;")
         leg_l = QHBoxLayout(leg)
@@ -93,10 +98,12 @@ class ViewResumen(QWidget):
         chart_panel.body().addWidget(leg)
         lv.addWidget(chart_panel)
 
-        # Panel distribución de densidad
+        # Panel: Distribución de pacientes por tipo de densidad mamaria (A/B/C/D)
+        # Cada fila muestra: nombre del tipo + barra de progreso + porcentaje + nº pacientes.
+        # Rellenar con: populate_density(data)
         dens_panel = Panel("Distribución por tipo de densidad")
-        self._density_rows = []
-        density_colors = ["#97C459", "#378ADD", "#EF9F27", "#D85A30"]
+        self._density_rows = []   # Lista de (ProgressBar, lbl_pct, lbl_n) para actualizar
+        density_colors = ["#97C459", "#378ADD", "#EF9F27", "#D85A30"]  # A=verde, B=azul, C=naranja, D=rojo
         for i, tipo in enumerate(["Tipo A", "Tipo B", "Tipo C", "Tipo D"]):
             row = QWidget()
             row.setStyleSheet("background:transparent;")
@@ -108,15 +115,15 @@ class ViewResumen(QWidget):
             l1.setFixedWidth(60)
             rl.addWidget(l1)
 
-            bar = ProgressBar(0.0, density_colors[i], 8)
+            bar = ProgressBar(0.0, density_colors[i], 8)   # Proporción vacía hasta populate_density()
             rl.addWidget(bar, 1)
 
-            l2 = label("—", 12, COLORS["text_primary"], "bold")
+            l2 = label("—", 12, COLORS["text_primary"], "bold")   # Porcentaje (p. ej. "18%")
             l2.setFixedWidth(40)
             l2.setContentsMargins(5, 2, 5, 2)
             rl.addWidget(l2)
 
-            l3 = label("n=—", 11, COLORS["text_tertiary"])
+            l3 = label("n=—", 11, COLORS["text_tertiary"])   # Número de pacientes (p. ej. "n=1.498")
             l3.setFixedWidth(65)
             l3.setContentsMargins(5, 2, 5, 2)
             rl.addWidget(l3)
@@ -127,7 +134,7 @@ class ViewResumen(QWidget):
         lv.addWidget(dens_panel)
         tc.addWidget(left, 1)
 
-        # Columna derecha
+        # ── COLUMNA DERECHA ───────────────────────────────────────────────
         right = QWidget()
         right.setStyleSheet("background:transparent;")
         rv = QVBoxLayout(right)
@@ -135,15 +142,18 @@ class ViewResumen(QWidget):
         rv.setSpacing(16)
         right.setFixedWidth(300)
 
-        # Panel estado del proceso
+        # Panel: Estado del proceso (pipeline de 5 pasos)
+        # Muestra el progreso del pipeline: DICOM → RIS → AGD → Informe → Exportar.
+        # Cada paso tiene estado: "" (pendiente), "active" (en curso), "done" (completado).
+        # Rellenar con: populate_steps(steps)
         proc_panel = Panel("Estado del proceso")
-        self._step_rows = []
+        self._step_rows = []   # Lista de (lbl_numero, lbl_detalle) para actualizar el estado
         step_names = [
-            ("Importar DICOM",           "Pendiente"),
-            ("Cruzar con RIS",           "Pendiente"),
-            ("Calcular AGD por densidad","Pendiente"),
-            ("Generar informe EUREF",    "Pendiente"),
-            ("Exportar resultados",      "Pendiente"),
+            ("Importar DICOM",            "Pendiente"),   # Paso 1: carga de imágenes DICOM desde PACS
+            ("Cruzar con RIS",            "Pendiente"),   # Paso 2: match de registros con el sistema RIS
+            ("Calcular AGD por densidad", "Pendiente"),   # Paso 3: cálculo de dosis AGD segmentada
+            ("Generar informe EUREF",     "Pendiente"),   # Paso 4: generación del informe de cumplimiento
+            ("Exportar resultados",       "Pendiente"),   # Paso 5: exportación a CSV/PDF
         ]
         for idx, (name, detail) in enumerate(step_names):
             row = QWidget()
@@ -152,6 +162,7 @@ class ViewResumen(QWidget):
             rl.setContentsMargins(12, 8, 12, 8)
             rl.setSpacing(12)
 
+            # Indicador de estado: número (pendiente), "→" (activo), "✓" (completado)
             num = QLabel(str(idx + 1))
             num.setStyleSheet(
                 f"background:{COLORS['bg_secondary']}; color:{COLORS['text_secondary']}; "
@@ -168,7 +179,7 @@ class ViewResumen(QWidget):
             cv.setContentsMargins(0, 0, 0, 0)
             cv.setSpacing(1)
             lbl_name   = label(name, 12, COLORS["text_primary"])
-            lbl_detail = label(detail, 11, COLORS["text_tertiary"])
+            lbl_detail = label(detail, 11, COLORS["text_tertiary"])  # Se actualiza con populate_steps()
             cv.addWidget(lbl_name)
             cv.addWidget(lbl_detail)
             rl.addWidget(col, 1)
@@ -180,9 +191,12 @@ class ViewResumen(QWidget):
 
         rv.addWidget(proc_panel)
 
-        # Panel alertas
+        # Panel: Alertas y avisos
+        # Lista dinámica de alertas generadas por el sistema (p. ej. pacientes fuera de rango).
+        # El panel se vacía y se rellena de nuevo con populate_alerts(alerts).
+        # Cada alerta tiene: estilo visual (amber/coral/blue), título y subtítulo.
         alerts_panel = Panel("Alertas y avisos")
-        self._alerts_layout = alerts_panel.body()
+        self._alerts_layout = alerts_panel.body()   # Layout expuesto para añadir/eliminar alertas
         rv.addWidget(alerts_panel)
         rv.addStretch()
         tc.addWidget(right)
@@ -190,29 +204,26 @@ class ViewResumen(QWidget):
         main.addWidget(two_col)
         main.addStretch()
 
-    # ── MÉTODOS PÚBLICOS ───────────────────────────────────────────────────
+    # ══════════════════════════════════════════════════════════════════════
+    #  MÉTODOS DE DATOS — Llamar desde ResumenController
+    # ══════════════════════════════════════════════════════════════════════
 
     def populate_metrics(self, data: list):
         """
-        Rellena las 4 tarjetas de KPI superiores.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Rellena las 4 tarjetas KPI de la fila superior.
 
-        Parámetros
-        ----------
-        data : list de dicts con claves: value, subtitle, badge_text, badge_style
-            Orden: [pacientes_totales, dosis_media, registros_cruzados, desviacion_std]
+        data: list de 4 dicts con claves: value, subtitle, badge_text, badge_style
+        Orden: [pacientes_totales, dosis_media, registros_cruzados, desviacion_std]
 
-            Ejemplo:
-                data = [
-                    {"value": "8.342", "subtitle": "Exploración 2023–2024",
-                     "badge_text": "+312 nuevo lote", "badge_style": "blue"},
-                    {"value": "1,84",  "subtitle": "Media ponderada",
-                     "badge_text": "Dentro EUREF",    "badge_style": "green"},
-                    {"value": "8.189", "subtitle": "98,2% tasa de match",
-                     "badge_text": "153 descartados", "badge_style": "green"},
-                    {"value": "0,41",  "subtitle": "Dosis AGD",
-                     "badge_text": "Revisar tipo C",  "badge_style": "amber"},
-                ]
-                view.populate_metrics(data)
+        Ejemplo:
+            view.populate_metrics([
+                {"value": "8.342", "subtitle": "Exploración 2023–2024",
+                 "badge_text": "+312 nuevo lote", "badge_style": "blue"},
+                {"value": "1,84",  "subtitle": "Media ponderada",
+                 "badge_text": "Dentro EUREF",    "badge_style": "green"},
+                ...
+            ])
         """
         for card, d in zip(self._metric_cards, data):
             card.set_values(
@@ -224,30 +235,26 @@ class ViewResumen(QWidget):
 
     def populate_chart(self, data: list):
         """
-        Rellena el gráfico de barras AGD.
-        Delega directamente en BarChart.set_data(data).
-
-        Ver BarChart.set_data() para el formato esperado.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Rellena el gráfico de barras AGD por grupo de densidad.
+        Delega en BarChart.set_data(data) — ver su docstring para el formato.
         """
         self._bar_chart.set_data(data)
 
     def populate_density(self, data: list):
         """
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
         Rellena las barras de distribución por tipo de densidad.
 
-        Parámetros
-        ----------
-        data : list de dicts, uno por tipo A/B/C/D, en orden
+        data: list de 4 dicts en orden A/B/C/D
             Claves: proportion (0.0–1.0), pct_text (str), n (str)
 
-            Ejemplo:
-                data = [
-                    {"proportion": 0.18, "pct_text": "18%", "n": "1.498"},
-                    {"proportion": 0.42, "pct_text": "42%", "n": "3.503"},
-                    {"proportion": 0.30, "pct_text": "30%", "n": "2.502"},
-                    {"proportion": 0.10, "pct_text": "10%", "n": "835"},
-                ]
-                view.populate_density(data)
+        Ejemplo:
+            view.populate_density([
+                {"proportion": 0.18, "pct_text": "18%", "n": "1.498"},
+                {"proportion": 0.42, "pct_text": "42%", "n": "3.503"},
+                ...
+            ])
         """
         for (bar, lbl_pct, lbl_n), d in zip(self._density_rows, data):
             bar.set_value(d.get("proportion", 0.0))
@@ -256,22 +263,20 @@ class ViewResumen(QWidget):
 
     def populate_steps(self, steps: list):
         """
-        Actualiza el estado del pipeline de proceso.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Actualiza el estado visual de cada paso del pipeline.
 
-        Parámetros
-        ----------
-        steps : list de dicts, uno por paso (mismo orden que la UI)
+        steps: list de 5 dicts en orden (mismo orden que la UI)
             Claves: state ("done" | "active" | ""), detail (str)
 
-            Ejemplo:
-                steps = [
-                    {"state": "done",   "detail": "8.342 estudios cargados"},
-                    {"state": "done",   "detail": "8.189 registros enlazados"},
-                    {"state": "active", "detail": "En proceso…"},
-                    {"state": "",       "detail": "Pendiente"},
-                    {"state": "",       "detail": "Pendiente"},
-                ]
-                view.populate_steps(steps)
+        Ejemplo:
+            view.populate_steps([
+                {"state": "done",   "detail": "8.342 estudios cargados"},
+                {"state": "done",   "detail": "8.189 registros enlazados"},
+                {"state": "active", "detail": "En proceso…"},
+                {"state": "",       "detail": "Pendiente"},
+                {"state": "",       "detail": "Pendiente"},
+            ])
         """
         step_icons = {"done": "✓", "active": "→"}
         step_styles = {
@@ -291,25 +296,23 @@ class ViewResumen(QWidget):
 
     def populate_alerts(self, alerts: list):
         """
-        Rellena el panel de alertas dinámicamente.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Vacía el panel de alertas y lo rellena con las alertas actuales.
 
-        Parámetros
-        ----------
-        alerts : list de dicts
-            Claves: style ("amber"|"coral"|"blue"), title (str), subtitle (str)
+        alerts: list de dicts
+            Claves: style ("amber" | "coral" | "blue"), title (str), subtitle (str)
 
-            Ejemplo:
-                alerts = [
-                    {"style": "amber", "title": "Tipo C — 47 pacientes superan ref.",
-                     "subtitle": "AGD > 2,5 mGy en tipo C"},
-                    {"style": "coral", "title": "12 estudios sin densidad",
-                     "subtitle": "Metadatos DICOM incompletos"},
-                    {"style": "blue",  "title": "Nuevo lote PACS disponible",
-                     "subtitle": "312 estudios pendientes"},
-                ]
-                view.populate_alerts(alerts)
+        Ejemplo:
+            view.populate_alerts([
+                {"style": "amber", "title": "Tipo C — 47 pacientes superan ref.",
+                 "subtitle": "AGD > 2,5 mGy en tipo C"},
+                {"style": "coral", "title": "12 estudios sin densidad",
+                 "subtitle": "Metadatos DICOM incompletos"},
+                {"style": "blue",  "title": "Nuevo lote PACS disponible",
+                 "subtitle": "312 estudios pendientes"},
+            ])
         """
-        # Limpiar alertas previas
+        # Limpiar todas las alertas previas antes de añadir las nuevas
         while self._alerts_layout.count():
             item = self._alerts_layout.takeAt(0)
             if item.widget():

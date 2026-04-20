@@ -1,39 +1,46 @@
-
 from PySide6.QtWidgets import (
-   QWidget, QHBoxLayout, QVBoxLayout,QLineEdit
+    QWidget, QHBoxLayout, QVBoxLayout, QLineEdit
 )
-
 from PySide6.QtCore import Qt
-
-
 from main.python.Views.colors import COLORS
 from main.python.Views.utils import Panel, badge, label, separator
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  VISTA: Configuración
+#  Permite editar los parámetros EUREF y consultar el estado de las integraciones.
+#
+#  ESTRUCTURA VISUAL:
+#    ┌──────────────────────────────────────────┐
+#    │  Parámetros EUREF                        │
+#    │    Límite AGD tipo A (mGy)  [ 2,0 ]      │
+#    │    Límite AGD tipo B (mGy)  [ 2,5 ]      │
+#    │    ...                                   │
+#    ├──────────────────────────────────────────┤
+#    │  Integraciones                           │
+#    │    🔵 PACS — Sectra IDS7     [Conectado] │
+#    │    🟢 RIS  — Carestream Vue  [Conectado] │
+#    │    ⚪ HIS  — Cerner           [Inactivo]  │
+#    └──────────────────────────────────────────┘
+#
+#  ATRIBUTOS PÚBLICOS (leer desde ConfigController al guardar):
+#    euref_inputs   → dict { nombre_param: QLineEdit }
+#
+#  MÉTODOS DE DATOS (llamar desde ConfigController):
+#    populate_euref_params(params)       → carga los valores guardados en los inputs
+#    populate_integrations(integrations) → actualiza los badges de estado de cada sistema
+# ══════════════════════════════════════════════════════════════════════════════
+
 class ViewConfig(QWidget):
-    """
-    Vista de configuración.
 
-    DATOS NECESARIOS (populate_*)
-    ───────────────────────────────────────────────────────────────────────
-    populate_euref_params(params)      ← Parámetros EUREF editables
-    populate_integrations(integrations)← Estado de las integraciones
-
-    SEÑALES INTERNAS
-    ───────────────────────────────────────────────────────────────────────
-    Los QLineEdit de parámetros EUREF se exponen en:
-        view.euref_inputs   → dict { "Límite AGD tipo A (mGy)": QLineEdit, ... }
-
-    Para guardar cambios conecta al controller:
-        save_btn.clicked.connect(ctrl.on_save_config)
-        ... y lee view.euref_inputs["Límite AGD tipo A (mGy)"].text()
-    """
-
+    # Nombres exactos de los parámetros EUREF — usados como claves en euref_inputs
+    # y en el dict que recibe populate_euref_params()
     EUREF_PARAM_NAMES = [
-        "Límite AGD tipo A (mGy)",
-        "Límite AGD tipo B (mGy)",
-        "Límite AGD tipo C (mGy)",
-        "Límite AGD tipo D (mGy)",
-        "Umbral alerta (% pacientes sobre límite)",
+        "Límite AGD tipo A (mGy)",                  # Límite máximo de dosis para densidad tipo A
+        "Límite AGD tipo B (mGy)",                  # Límite máximo de dosis para densidad tipo B
+        "Límite AGD tipo C (mGy)",                  # Límite máximo de dosis para densidad tipo C
+        "Límite AGD tipo D (mGy)",                  # Límite máximo de dosis para densidad tipo D
+        "Umbral alerta (% pacientes sobre límite)",  # % máximo aceptable de pacientes fuera de límite
     ]
 
     def __init__(self, parent=None):
@@ -43,9 +50,18 @@ class ViewConfig(QWidget):
         main.setContentsMargins(20, 20, 20, 20)
         main.setSpacing(16)
 
-        # ── Parámetros EUREF ──────────────────────────────────────────────
+        # ── SECCIÓN 1: Parámetros EUREF editables ─────────────────────────
+        # Campos de texto para modificar los límites de dosis y el umbral de alerta.
+        # Estos valores determinan qué pacientes se marcan como "Revisar" en ViewDosis
+        # y qué alertas se generan en ViewResumen.
+        #
+        # Para cargar los valores guardados al arrancar:
+        #   view.populate_euref_params(config_controller.get_euref_params())
+        #
+        # Para leer los valores al guardar (desde un botón "Guardar" futuro):
+        #   value = view.euref_inputs["Límite AGD tipo A (mGy)"].text()
         euref_panel = Panel("Parámetros EUREF")
-        self.euref_inputs = {}
+        self.euref_inputs = {}   # dict { nombre_param: QLineEdit } expuesto al controller
 
         for param_name in self.EUREF_PARAM_NAMES:
             row = QWidget()
@@ -53,9 +69,13 @@ class ViewConfig(QWidget):
             rl = QHBoxLayout(row)
             rl.setContentsMargins(12, 6, 6, 6)
             rl.setSpacing(12)
+
+            # Nombre del parámetro a la izquierda
             rl.addWidget(label(param_name, 12, COLORS["text_primary"]), 1)
 
-            val_input = QLineEdit()    # Sin valor por defecto — se rellena con populate_euref_params()
+            # Campo de entrada numérica a la derecha
+            # Se rellena con populate_euref_params() al arrancar la vista
+            val_input = QLineEdit()
             val_input.setFixedSize(80, 28)
             val_input.setAlignment(Qt.AlignCenter)
             val_input.setStyleSheet(
@@ -65,20 +85,31 @@ class ViewConfig(QWidget):
                 "QLineEdit:focus { border-color:#185FA5; }"
             )
             rl.addWidget(val_input)
-            self.euref_inputs[param_name] = val_input
+            self.euref_inputs[param_name] = val_input   # Expuesto para lectura desde controller
             euref_panel.body().addWidget(row)
-            euref_panel.body().addWidget(separator())
+            euref_panel.body().addWidget(separator())   # Línea separadora entre parámetros
 
         main.addWidget(euref_panel)
 
-        # ── Integraciones ─────────────────────────────────────────────────
+        # ── SECCIÓN 2: Estado de las integraciones externas ───────────────
+        # Muestra el estado de conexión de cada sistema externo (PACS, RIS, HIS).
+        # Los badges de estado se actualizan con populate_integrations().
+        # Para añadir una nueva integración: añadir una tupla a integration_defs.
         integr_panel = Panel("Integraciones")
-        self._integration_badges = {}
+        self._integration_badges = {}   # dict { key: QLabel badge } para actualizar estados
 
         integration_defs = [
-            ("pacs", "🔵", "PACS — Sectra IDS7",     "Importación automática de imágenes DICOM"),
-            ("ris",  "🟢", "RIS — Carestream Vue",    "Exportación de informes al sistema RIS"),
-            ("his",  "⚪", "HIS — Cerner Millennium", "Integración con historia clínica"),
+            ("pacs", "🔵", "PACS — Sectra IDS7",
+             "Importación automática de imágenes DICOM"),
+            # Sistema de almacenamiento y comunicación de imágenes
+
+            ("ris",  "🟢", "RIS — Carestream Vue",
+             "Exportación de informes al sistema RIS"),
+            # Sistema de información radiológica para gestión de informes
+
+            ("his",  "⚪", "HIS — Cerner Millennium",
+             "Integración con historia clínica"),
+            # Sistema de información hospitalaria para historia clínica del paciente
         ]
 
         for key, icon, name, desc in integration_defs:
@@ -91,10 +122,12 @@ class ViewConfig(QWidget):
             rl.setContentsMargins(14, 12, 14, 12)
             rl.setSpacing(14)
 
+            # Icono identificador del sistema
             ico = label(icon, 20, "#000")
             ico.setFixedWidth(36)
             rl.addWidget(ico)
 
+            # Nombre y descripción del sistema
             col = QWidget()
             col.setStyleSheet("background:transparent; padding-left: 10px;")
             cv = QVBoxLayout(col)
@@ -104,7 +137,9 @@ class ViewConfig(QWidget):
             cv.addWidget(label(desc, 11, COLORS["text_tertiary"]))
             rl.addWidget(col, 1)
 
-            bdg = badge("—", "gray")
+            # Badge de estado: se actualiza con populate_integrations()
+            # Valores típicos: "Conectado" (green) / "Inactivo" (gray) / "Error" (coral)
+            bdg = badge("—", "gray")   # Arranca vacío hasta populate_integrations()
             rl.addWidget(bdg)
             self._integration_badges[key] = bdg
             integr_panel.body().addWidget(row)
@@ -112,29 +147,28 @@ class ViewConfig(QWidget):
         main.addWidget(integr_panel)
         main.addStretch()
 
-    # ── MÉTODOS PÚBLICOS ───────────────────────────────────────────────────
+    # ══════════════════════════════════════════════════════════════════════
+    #  MÉTODOS DE DATOS — Llamar desde ConfigController
+    # ══════════════════════════════════════════════════════════════════════
 
     def populate_euref_params(self, params: dict):
         """
-        Rellena los campos de parámetros EUREF.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Carga los valores guardados en los campos de parámetros EUREF.
+        Llamar al arrancar la vista para mostrar la configuración actual.
 
-        Parámetros
-        ----------
-        params : dict  { nombre_param: valor_str }
+        params: dict { nombre_param: valor_str }
 
-            Ejemplo:
-                params = {
-                    "Límite AGD tipo A (mGy)": "2,0",
-                    "Límite AGD tipo B (mGy)": "2,5",
-                    "Límite AGD tipo C (mGy)": "3,0",
-                    "Límite AGD tipo D (mGy)": "3,5",
-                    "Umbral alerta (% pacientes sobre límite)": "10%",
-                }
-                view.populate_euref_params(params)
+        Ejemplo:
+            view.populate_euref_params({
+                "Límite AGD tipo A (mGy)": "2,0",
+                "Límite AGD tipo B (mGy)": "2,5",
+                "Límite AGD tipo C (mGy)": "3,0",
+                "Límite AGD tipo D (mGy)": "3,5",
+                "Umbral alerta (% pacientes sobre límite)": "10%",
+            })
 
-        Cómo obtener los datos:
-            Carga los valores desde un JSON/DB en ConfigController
-            y llama a este método al arrancar la vista.
+        Fuente de datos recomendada: archivo JSON de configuración o base de datos.
         """
         for name, widget in self.euref_inputs.items():
             if name in params:
@@ -142,20 +176,22 @@ class ViewConfig(QWidget):
 
     def populate_integrations(self, integrations: dict):
         """
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
         Actualiza los badges de estado de cada integración.
+        Llamar al arrancar la vista y también periódicamente si se hacen ping a los sistemas.
 
-        Parámetros
-        ----------
-        integrations : dict  { key: {"active": bool, "label": str} }
+        integrations: dict { key: {"active": bool, "label": str} }
             Keys esperadas: "pacs", "ris", "his"
 
-            Ejemplo:
-                integrations = {
-                    "pacs": {"active": True,  "label": "Conectado"},
-                    "ris":  {"active": True,  "label": "Conectado"},
-                    "his":  {"active": False, "label": "Inactivo"},
-                }
-                view.populate_integrations(integrations)
+        Ejemplo:
+            view.populate_integrations({
+                "pacs": {"active": True,  "label": "Conectado"},
+                "ris":  {"active": True,  "label": "Conectado"},
+                "his":  {"active": False, "label": "Inactivo"},
+            })
+
+        Para un estado de error añadir: {"active": False, "label": "Error de conexión"}
+        y cambiar el estilo del badge a "coral" si es necesario.
         """
         for key, bdg in self._integration_badges.items():
             info = integrations.get(key, {})

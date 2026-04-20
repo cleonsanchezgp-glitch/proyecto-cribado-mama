@@ -1,8 +1,6 @@
-
 from PySide6.QtWidgets import (
-    QFrame, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QScrollArea,QSizePolicy, QLabel
+    QFrame, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QScrollArea, QSizePolicy, QLabel
 )
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import (
     QColor, QPainter, QPen, QBrush, QCursor
@@ -10,16 +8,24 @@ from PySide6.QtGui import (
 
 from main.python.Views.colors import COLORS
 
+
 # ══════════════════════════════════════════════════════════════════════════════
-#  HELPERS DE ESTILO
+#  FUNCIONES HELPER DE ESTILO
+#  Utilidades reutilizables para crear widgets con estilos consistentes.
+#  No contienen lógica de negocio — solo presentación.
 # ══════════════════════════════════════════════════════════════════════════════
 
 def card_style(bg="#ffffff", radius=12, border=True):
+    """Devuelve un string CSS para usar como stylesheet de una tarjeta."""
     b = "border: 0.5px solid rgba(0,0,0,0.10);" if border else ""
     return f"background:{bg}; border-radius:{radius}px; {b}"
 
 
 def label(text, size=13, color="#1a1a18", weight="normal", wrap=False):
+    """
+    Crea un QLabel con estilos predefinidos de la interfaz.
+    Úsalo en lugar de QLabel() directamente para mantener consistencia visual.
+    """
     lbl = QLabel(text)
     lbl.setStyleSheet(
         f"font-size:{size}px; color:{color}; "
@@ -30,8 +36,12 @@ def label(text, size=13, color="#1a1a18", weight="normal", wrap=False):
         lbl.setWordWrap(True)
     return lbl
 
+
 def load_stylesheet(file_path):
-    """Lee un archivo CSS y devuelve el contenido como string."""
+    """
+    Lee un archivo CSS externo y devuelve su contenido como string.
+    Se usa en MainWindow para aplicar el stylesheet global a la aplicación.
+    """
     try:
         with open(file_path, "r") as f:
             return f.read()
@@ -39,7 +49,13 @@ def load_stylesheet(file_path):
         print(f"Error: No se encontró el archivo {file_path}")
         return ""
 
+
 def badge(text, style="blue"):
+    """
+    Crea una etiqueta pill (pastilla redondeada) de estado o categoría.
+    Estilos disponibles: "blue", "green", "amber", "coral", "gray".
+    Se usa para indicar estados como "Conectado", "Revisar", "OK", etc.
+    """
     styles = {
         "blue":  "background:#E6F1FB; color:#185FA5;",
         "green": "background:#EAF3DE; color:#3B6D11;",
@@ -56,48 +72,64 @@ def badge(text, style="blue"):
     lbl.setFixedHeight(18)
     return lbl
 
+
 def separator(horizontal=True):
+    """
+    Crea una línea divisoria fina horizontal o vertical.
+    Se usa para separar filas dentro de paneles (p. ej. lista de parámetros EUREF).
+    """
     line = QFrame()
     line.setFrameShape(QFrame.HLine if horizontal else QFrame.VLine)
     line.setStyleSheet("color: rgba(0,0,0,0.10); background: rgba(0,0,0,0.10);")
     line.setFixedHeight(1 if horizontal else 0)
     return line
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  WIDGET: ProgressBar
+#  Barra de progreso personalizada pintada con QPainter.
+#  Se usa en ViewResumen (distribución por densidad) y ViewDosis (cumplimiento EUREF).
+#
+#  PARA RELLENAR CON DATOS REALES:
+#      bar.set_value(proporcion_float, color_hex)
+#      Ejemplo: bar.set_value(0.94, "#3B6D11")
+# ══════════════════════════════════════════════════════════════════════════════
+
 class ProgressBar(QWidget):
     """Barra de progreso horizontal pintada a mano."""
 
     def __init__(self, value=0.0, color="#185FA5", height=8, parent=None):
         super().__init__(parent)
-        self._value = max(0.0, min(1.0, value))
+        self._value = max(0.0, min(1.0, value))   # Proporción entre 0.0 y 1.0
         self._color = color
         self.setFixedHeight(height)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-    # ── MÉTODO PÚBLICO ─────────────────────────────────────────────────────
     def set_value(self, value: float, color: str = None):
         """
-        Actualiza el valor de la barra.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Actualiza la barra con un nuevo valor y color opcionales.
 
-        Parámetros
-        ----------
-        value : float  — proporción entre 0.0 y 1.0
-        color : str    — color hex opcional (p. ej. "#378ADD")
-
-        Uso desde controller:
+        Llamar desde el controller tras calcular el porcentaje:
             bar.set_value(agd_cumplimiento / 100.0, "#3B6D11")
         """
         self._value = max(0.0, min(1.0, value))
         if color:
             self._color = color
-        self.update()
+        self.update()   # Fuerza repintado
 
     def paintEvent(self, event):
+        # Dibuja el fondo gris y el relleno coloreado proporcionalmente
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         r = self.rect()
+
+        # Fondo gris claro
         p.setBrush(QBrush(QColor("#f0ede8")))
         p.setPen(Qt.NoPen)
         p.drawRoundedRect(r, 4, 4)
+
+        # Relleno coloreado según el valor
         fill_w = int(r.width() * self._value)
         if fill_w > 0:
             fr = r.adjusted(0, 0, -(r.width() - fill_w), 0)
@@ -105,48 +137,44 @@ class ProgressBar(QWidget):
             p.drawRoundedRect(fr, 4, 4)
 
 
-class BarChart(QWidget):
-    """
-    Gráfico de barras agrupadas para dosis AGD.
+# ══════════════════════════════════════════════════════════════════════════════
+#  WIDGET: BarChart
+#  Gráfico de barras agrupadas (año anterior / año actual) para dosis AGD.
+#  Se usa en ViewResumen, panel "Dosis media AGD por grupo de densidad".
+#
+#  PARA RELLENAR CON DATOS REALES:
+#      chart.set_data([
+#          ("Tipo A", valor_anterior, valor_actual, color_claro, color_oscuro),
+#          ...
+#      ])
+# ══════════════════════════════════════════════════════════════════════════════
 
-    Los datos se inyectan con set_data(); mientras no se llame,
-    el gráfico aparece vacío (sin barras hardcodeadas).
-    """
+class BarChart(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimumHeight(220)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self._data = []      # Se rellena con set_data()
+        self._data = []   # Lista vacía hasta que se inyecten datos reales
 
-    # ── MÉTODO PÚBLICO ─────────────────────────────────────────────────────
     def set_data(self, data: list):
         """
-        Define las barras del gráfico.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Inyecta los datos del gráfico de barras.
 
-        Parámetros
-        ----------
-        data : list de tuplas
-            Formato: [("Tipo A", valor_2023, valor_2024, color_claro, color_oscuro), ...]
+        Formato esperado:
+            [("Tipo A", val_año_anterior, val_año_actual, color_claro, color_oscuro), ...]
 
-            Ejemplo:
-                chart.set_data([
-                    ("Tipo A", 82,  78,  "#B5D4F4", "#378ADD"),
-                    ("Tipo B", 112, 108, "#B5D4F4", "#378ADD"),
-                    ("Tipo C", 145, 149, "#B5D4F4", "#378ADD"),
-                    ("Tipo D", 172, 168, "#B5D4F4", "#378ADD"),
-                ])
-
-        Cómo obtener los datos:
-            - Desde tu DosisController calculas la AGD media por tipo y año.
-            - Llamas a chart.set_data(controller.get_agd_por_tipo()) en ViewDosis.populate_chart()
+        Llamar desde ViewResumen.populate_chart() con datos del controller:
+            chart.set_data(resumen_controller.get_agd_por_tipo())
         """
         self._data = data
-        self.update()
+        self.update()   # Fuerza repintado con los nuevos datos
 
     def paintEvent(self, event):
         if not self._data:
-            return
+            return   # Sin datos → no dibuja nada
+
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         w, h = self.width(), self.height()
@@ -155,37 +183,41 @@ class BarChart(QWidget):
         chart_h = h - margin_b - margin_t
         chart_w = w - margin_l - 12
 
-        # Grid lines
+        # ── Líneas de cuadrícula horizontal (eje Y) ───────────────────────
         for y_val in [0, 1.0, 2.0, 3.0]:
             y = h - margin_b - int(chart_h * y_val / 3.5)
             p.setPen(QPen(QColor(0, 0, 0, 25), 1, Qt.DashLine))
             p.drawLine(margin_l, y, w - 12, y)
+            # Etiqueta numérica del eje Y
             p.setPen(QColor("#9a9890"))
             font = p.font()
             font.setPointSize(7)
             p.setFont(font)
             p.drawText(0, y + 4, 34, 14, Qt.AlignRight, f"{y_val:.1f}")
 
-        # Barras
+        # ── Barras agrupadas por tipo de densidad ─────────────────────────
         group_w = chart_w / len(self._data)
         bar_w = group_w * 0.22
         gap = bar_w * 0.3
 
         for idx, (label_txt, h1, h2, c1, c2) in enumerate(self._data):
             gx = margin_l + idx * group_w + group_w * 0.15
-            max_h = 180
+            max_h = 180   # Altura máxima de referencia para escalar las barras
 
+            # Barra año anterior (color claro)
             bh1 = int(chart_h * h1 / max_h)
             x1 = int(gx)
             p.setPen(Qt.NoPen)
             p.setBrush(QBrush(QColor(c1)))
             p.drawRoundedRect(x1, h - margin_b - bh1, int(bar_w), bh1, 2, 2)
 
+            # Barra año actual (color oscuro)
             bh2 = int(chart_h * h2 / max_h)
             x2 = int(gx + bar_w + gap)
             p.setBrush(QBrush(QColor(c2)))
             p.drawRoundedRect(x2, h - margin_b - bh2, int(bar_w), bh2, 2, 2)
 
+            # Etiqueta del grupo en el eje X (p. ej. "Tipo A")
             p.setPen(QColor("#9a9890"))
             font2 = p.font()
             font2.setPointSize(7)
@@ -194,46 +226,44 @@ class BarChart(QWidget):
             p.drawText(center_x - 22, h - margin_b + 6, 44, 14, Qt.AlignCenter, label_txt)
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  WIDGET: ScatterPlot
+#  Gráfico de dispersión Espesor (mm) vs. AGD (mGy) coloreado por densidad.
+#  Se usa en ViewDosis, panel "Dispersión Espesor vs. AGD".
+#  Incluye línea de referencia EUREF a 2,5 mGy.
+#
+#  PARA RELLENAR CON DATOS REALES:
+#      scatter.set_data([
+#          (espesor_mm, agd_mGy, densidad_idx),   # densidad: 0=A, 1=B, 2=C, 3=D
+#          ...
+#      ])
+# ══════════════════════════════════════════════════════════════════════════════
+
 class ScatterPlot(QWidget):
-    """
-    Gráfico de dispersión Espesor vs. AGD por tipo de densidad.
 
-    Los puntos se inyectan con set_data(); sin datos, el gráfico
-    dibuja solo los ejes y la línea de referencia EUREF.
-    """
-
+    # Colores por tipo de densidad: A=verde, B=azul, C=naranja, D=rojo
     DENSITY_COLORS = ["#97C459", "#378ADD", "#EF9F27", "#D85A30"]
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimumHeight(240)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self._points = []    # Se rellena con set_data()
+        self._points = []   # Lista vacía hasta que se inyecten datos reales
 
-    # ── MÉTODO PÚBLICO ─────────────────────────────────────────────────────
     def set_data(self, points: list):
         """
-        Define los puntos del scatter plot.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Inyecta los puntos del scatter plot.
 
-        Parámetros
-        ----------
-        points : list de tuplas
-            Formato: [(espesor_mm: float, agd_mGy: float, densidad_idx: int), ...]
-            densidad_idx: 0=A, 1=B, 2=C, 3=D
+        Formato esperado:
+            [(espesor_mm: float, agd_mGy: float, densidad_idx: int), ...]
+            densidad_idx → 0=Tipo A, 1=Tipo B, 2=Tipo C, 3=Tipo D
 
-            Ejemplo (desde controller):
-                scatter.set_data([
-                    (42.5, 1.21, 0),   # paciente con densidad A
-                    (55.0, 1.84, 1),   # paciente con densidad B
-                    ...
-                ])
-
-        Cómo obtener los datos:
-            - Tu DosisController itera los registros y extrae (espesor, agd, densidad_idx).
-            - Llamas a scatter.set_data(controller.get_scatter_points()) en ViewDosis.populate_scatter()
+        Llamar desde ViewDosis.populate_scatter() con datos del controller:
+            scatter.set_data(dosis_controller.get_scatter_points())
         """
         self._points = points
-        self.update()
+        self.update()   # Fuerza repintado
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -244,12 +274,13 @@ class ScatterPlot(QWidget):
         chart_w = w - ml - mr
         chart_h = h - mb - mt
 
-        # Ejes
+        # ── Ejes X e Y ────────────────────────────────────────────────────
         p.setPen(QPen(QColor(0, 0, 0, 50), 1))
-        p.drawLine(ml, mt, ml, h - mb)
-        p.drawLine(ml, h - mb, w - mr, h - mb)
+        p.drawLine(ml, mt, ml, h - mb)       # Eje Y (vertical)
+        p.drawLine(ml, h - mb, w - mr, h - mb)  # Eje X (horizontal)
 
-        # Línea de referencia EUREF
+        # ── Línea de referencia EUREF a 2,5 mGy ──────────────────────────
+        # TODO: hacer configurable desde ViewConfig (parámetro "Límite AGD tipo B")
         ref_y = mt + int(chart_h * (1 - 2.5 / 4.5))
         p.setPen(QPen(QColor("#D85A30"), 1, Qt.DashLine))
         p.drawLine(ml, ref_y, w - mr, ref_y)
@@ -259,7 +290,7 @@ class ScatterPlot(QWidget):
         p.setFont(font)
         p.drawText(w - mr - 50, ref_y - -2, 50, 12, Qt.AlignRight, "Ref. EUREF")
 
-        # Etiquetas eje X
+        # ── Etiquetas del eje X (espesor en mm) ───────────────────────────
         p.setPen(QColor("#9a9890"))
         font2 = p.font()
         font2.setPointSize(7)
@@ -268,23 +299,32 @@ class ScatterPlot(QWidget):
             x = ml + int(chart_w * val)
             p.drawText(x - 15, h - mb + 6, 30, 12, Qt.AlignCenter, txt)
 
-        # Puntos
+        # ── Puntos del scatter (un punto por paciente) ────────────────────
         for thickness, agd, d in self._points:
+            # Mapear espesor (30–90mm) al ancho del gráfico
             xp = ml + int(chart_w * (thickness - 30) / 60)
+            # Mapear AGD (0–4,5 mGy) a la altura del gráfico (invertido: 0 abajo)
             yp = mt + int(chart_h * (1 - agd / 4.5))
             color = QColor(self.DENSITY_COLORS[d % len(self.DENSITY_COLORS)])
-            color.setAlpha(180)
+            color.setAlpha(180)   # Semi-transparente para ver solapamientos
             p.setPen(Qt.NoPen)
             p.setBrush(QBrush(color))
             p.drawEllipse(xp - 3, yp - 3, 7, 7)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  COMPONENTES DE SHELL  (Sidebar · Topbar · Panel)
+#  COMPONENTE: Sidebar
+#  Panel de navegación lateral izquierdo.
+#  Contiene: logo, menú de navegación por secciones, y footer de estado de conexión.
+#
+#  PARA ACTUALIZAR EL ESTADO DE CONEXIÓN DESDE UN CONTROLLER:
+#      sidebar.set_connection_status(True, "Conectado a PACS")
 # ══════════════════════════════════════════════════════════════════════════════
 
-
 class Sidebar(QWidget):
+
+    # Estructura del menú: (sección, [(id_vista, nombre, icono), ...])
+    # Para añadir una nueva vista: agregar una tupla aquí y registrarla en MainWindow.views
     NAV_ITEMS = [
         ("Análisis", [
             ("resumen",   "Resumen",          "◈"),
@@ -301,8 +341,14 @@ class Sidebar(QWidget):
     ]
 
     def __init__(self, on_nav, parent=None):
+        """
+        on_nav: callable(view_id: str) — función de MainWindow que cambia la vista activa.
+        Se pasa como callback para desacoplar Sidebar de MainWindow.
+        """
         super().__init__(parent)
         self.setFixedWidth(220)
+        # ObjectName necesario para que el selector CSS #Sidebar tenga alta especificidad
+        # y no sea sobreescrito por el stylesheet global de QWidget
         self.setObjectName("Sidebar")
         self.setStyleSheet(
             "#Sidebar, #Sidebar QWidget, #Sidebar QScrollArea {"
@@ -314,7 +360,7 @@ class Sidebar(QWidget):
             "}"
         )
         self._on_nav = on_nav
-        self._buttons = {}
+        self._buttons = {}   # Mapa { view_id: QPushButton } para gestionar el estado activo
         self._build()
 
     def _build(self):
@@ -322,7 +368,8 @@ class Sidebar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Logo
+        # ── Cabecera / Logo ───────────────────────────────────────────────
+        # Zona fija superior con icono, nombre de la app y nombre del hospital
         logo_w = QWidget()
         logo_w.setObjectName("SidebarLogo")
         logo_w.setFixedHeight(72)
@@ -334,6 +381,7 @@ class Sidebar(QWidget):
         ll.setContentsMargins(16, 16, 16, 12)
         ll.setSpacing(3)
 
+        # Icono de la aplicación (emoji de estetoscopio sobre fondo azul)
         icon_lbl = QLabel("🩺")
         icon_lbl.setStyleSheet(
             f"background:{COLORS['blue']}; border-radius:8px; font-size:16px; padding:4px; border:none;"
@@ -351,7 +399,8 @@ class Sidebar(QWidget):
         ll.addWidget(sub_lbl)
         layout.addWidget(logo_w)
 
-        # Nav
+        # ── Menú de navegación (scrollable) ──────────────────────────────
+        # Cada ítem es un QPushButton checkable que activa la vista correspondiente
         nav_scroll = QScrollArea()
         nav_scroll.setWidgetResizable(True)
         nav_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -365,6 +414,7 @@ class Sidebar(QWidget):
 
         first_btn = None
         for section_name, items in self.NAV_ITEMS:
+            # Etiqueta de sección (ANÁLISIS, DATOS, SISTEMA)
             sec_lbl = label(section_name.upper(), 10, COLORS["text_tertiary"])
             sec_lbl.setStyleSheet(
                 f"font-size:10px; color:{COLORS['text_tertiary']}; font-weight:600; "
@@ -375,6 +425,7 @@ class Sidebar(QWidget):
             nav_layout.addSpacing(4)
 
             for view_id, name, icon in items:
+                # Botón de navegación — al hacer clic llama a _nav_click(view_id)
                 btn = QPushButton(f"  {icon}  {name}")
                 btn.setCheckable(True)
                 btn.setCursor(QCursor(Qt.PointingHandCursor))
@@ -390,13 +441,15 @@ class Sidebar(QWidget):
                 nav_layout.addWidget(btn)
                 nav_layout.addSpacing(2)
                 if first_btn is None:
-                    first_btn = btn
+                    first_btn = btn   # Guardamos el primero para activarlo por defecto
 
         nav_layout.addStretch()
         nav_scroll.setWidget(nav_container)
         layout.addWidget(nav_scroll, 1)
 
-        # Footer de estado
+        # ── Footer de estado de conexión ──────────────────────────────────
+        # Muestra si la aplicación está conectada a PACS/RIS o en modo offline
+        # Para actualizar: sidebar.set_connection_status(True/False, "texto")
         footer = QWidget()
         footer.setObjectName("SidebarFooter")
         footer.setFixedHeight(40)
@@ -417,29 +470,31 @@ class Sidebar(QWidget):
         fl.addStretch()
         layout.addWidget(footer)
 
+        # Activar el primer ítem del menú al arrancar
         if first_btn:
             first_btn.setChecked(True)
 
     def _nav_click(self, view_id, clicked_btn):
+        """Desactiva todos los botones y activa solo el clicado. Llama al callback de navegación."""
         for btn in self._buttons.values():
             btn.setChecked(False)
         clicked_btn.setChecked(True)
         self._on_nav(view_id)
 
     def activate(self, view_id):
+        """
+        Activa programáticamente un botón del menú sin disparar la navegación.
+        Útil para sincronizar la sidebar cuando se cambia de vista desde código.
+        """
         for vid, btn in self._buttons.items():
             btn.setChecked(vid == view_id)
 
     def set_connection_status(self, online: bool, text: str = None):
         """
+        ── PUNTO DE ENTRADA DE ESTADO ─────────────────────────────────────
         Actualiza el indicador de conexión del footer.
 
-        Parámetros
-        ----------
-        online : bool  — True=verde (conectado), False=gris (offline)
-        text   : str   — Texto descriptivo opcional
-
-        Uso:
+        Llamar desde el controller de conexión PACS/RIS:
             sidebar.set_connection_status(True, "Conectado a PACS")
             sidebar.set_connection_status(False, "Sin conexión")
         """
@@ -450,6 +505,16 @@ class Sidebar(QWidget):
         if text:
             self._status_label.setText(text)
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  COMPONENTE: Topbar
+#  Barra superior horizontal con título de la vista activa y botones de acción.
+#  Contiene: título dinámico, botón "Exportar" y botón "Nuevo análisis".
+#
+#  PARA CONECTAR LOS BOTONES DESDE MainWindow:
+#      topbar.export_btn.clicked.connect(ctrl.on_export)
+#      topbar.new_analysis_btn.clicked.connect(ctrl.on_new_analysis)
+# ══════════════════════════════════════════════════════════════════════════════
 
 class Topbar(QWidget):
     def __init__(self, parent=None):
@@ -462,6 +527,7 @@ class Topbar(QWidget):
         layout.setContentsMargins(20, 0, 20, 0)
         layout.setSpacing(10)
 
+        # Título dinámico — se actualiza con set_title() al cambiar de vista
         self.title = QLabel("")
         self.title.setStyleSheet(
             f"font-size:15px; font-weight:600; color:{COLORS['text_primary']}; "
@@ -469,6 +535,8 @@ class Topbar(QWidget):
         )
         layout.addWidget(self.title, 1)
 
+        # Botón secundario: exportar resultados del análisis actual
+        # Conectar en MainWindow: self.topbar.export_btn.clicked.connect(...)
         self.export_btn = QPushButton("↓  Exportar")
         self.export_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.export_btn.setFixedHeight(30)
@@ -480,6 +548,8 @@ class Topbar(QWidget):
         )
         layout.addWidget(self.export_btn)
 
+        # Botón primario: iniciar un nuevo ciclo de análisis
+        # Conectar en MainWindow: self.topbar.new_analysis_btn.clicked.connect(...)
         self.new_analysis_btn = QPushButton("→  Nuevo análisis")
         self.new_analysis_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.new_analysis_btn.setFixedHeight(30)
@@ -491,11 +561,18 @@ class Topbar(QWidget):
         layout.addWidget(self.new_analysis_btn)
 
     def set_title(self, text: str):
+        """Actualiza el título mostrado en la topbar. Lo llama MainWindow._on_nav()."""
         self.title.setText(text)
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  COMPONENTE: Panel
+#  Contenedor con cabecera de título y cuerpo de contenido.
+#  Es el bloque visual base de todas las vistas (tarjetas blancas con borde).
+#  Uso: panel = Panel("Título"); panel.body().addWidget(mi_widget)
+# ══════════════════════════════════════════════════════════════════════════════
+
 class Panel(QWidget):
-    """Tarjeta con cabecera y cuerpo genérico."""
 
     def __init__(self, title="", parent=None):
         super().__init__(parent)
@@ -507,6 +584,7 @@ class Panel(QWidget):
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(0)
 
+        # Cabecera con título (opcional — si title="" no se muestra)
         if title:
             header = QWidget()
             header.setFixedHeight(44)
@@ -519,6 +597,7 @@ class Panel(QWidget):
             hl.addStretch()
             self._layout.addWidget(header)
 
+        # Cuerpo del panel — aquí se añaden los widgets hijos
         self._body = QWidget()
         self._body.setStyleSheet("background:transparent;")
         self._body_layout = QVBoxLayout(self._body)
@@ -527,11 +606,20 @@ class Panel(QWidget):
         self._layout.addWidget(self._body)
 
     def body(self):
+        """Devuelve el QVBoxLayout del cuerpo para añadir widgets hijos."""
         return self._body_layout
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  COMPONENTE: MetricCard
+#  Tarjeta KPI con título, valor numérico grande, subtítulo y badge de estado.
+#  Se usa en ViewResumen (fila superior de 4 tarjetas).
+#
+#  PARA ACTUALIZAR CON DATOS REALES:
+#      card.set_values("8.342", "Exploración 2023–2024", "+312 nuevo lote", "blue")
+# ══════════════════════════════════════════════════════════════════════════════
+
 class MetricCard(QWidget):
-    """Tarjeta de métrica con título, valor, subtítulo y badge."""
 
     def __init__(self, title, value="—", subtitle="", badge_text="", badge_style="blue", parent=None):
         super().__init__(parent)
@@ -540,6 +628,7 @@ class MetricCard(QWidget):
         layout.setContentsMargins(14, 12, 14, 14)
         layout.setSpacing(4)
 
+        # Título de la métrica en mayúsculas pequeñas (p. ej. "PACIENTES TOTALES")
         lbl_title = QLabel(title.upper())
         lbl_title.setStyleSheet(
             f"font-size:10px; font-weight:600; color:{COLORS['text_tertiary']}; "
@@ -547,6 +636,7 @@ class MetricCard(QWidget):
         )
         layout.addWidget(lbl_title)
 
+        # Valor principal — número grande que se actualiza con set_values()
         self._lbl_val = QLabel(value)
         self._lbl_val.setStyleSheet(
             f"font-size:22px; font-weight:500; color:{COLORS['text_primary']}; "
@@ -554,30 +644,25 @@ class MetricCard(QWidget):
         )
         layout.addWidget(self._lbl_val)
 
+        # Subtítulo descriptivo (p. ej. "Media ponderada")
         self._lbl_sub = QLabel(subtitle)
         self._lbl_sub.setStyleSheet(
             f"font-size:11px; color:{COLORS['text_tertiary']}; background:transparent; border:none;"
         )
         layout.addWidget(self._lbl_sub)
 
+        # Badge de estado (p. ej. "Dentro EUREF" en verde)
         self._badge = badge(badge_text, badge_style)
         layout.addWidget(self._badge)
         layout.addStretch()
 
-    # ── MÉTODO PÚBLICO ─────────────────────────────────────────────────────
     def set_values(self, value: str, subtitle: str = None, badge_text: str = None, badge_style: str = None):
         """
-        Actualiza los datos de la tarjeta.
+        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Actualiza todos los campos visuales de la tarjeta.
 
-        Parámetros
-        ----------
-        value      : str  — Valor principal  (p. ej. "1,84 mGy")
-        subtitle   : str  — Línea de contexto (p. ej. "Media ponderada")
-        badge_text : str  — Texto del badge   (p. ej. "Dentro EUREF")
-        badge_style: str  — "blue" | "green" | "amber" | "coral" | "gray"
-
-        Uso:
-            card_dosis.set_values("1,84 mGy", "Media ponderada", "Dentro EUREF", "green")
+        Llamar desde ViewResumen.populate_metrics() con datos del controller:
+            card.set_values("8.342", "Exploración 2023–2024", "+312 nuevo lote", "blue")
         """
         self._lbl_val.setText(value)
         if subtitle is not None:
