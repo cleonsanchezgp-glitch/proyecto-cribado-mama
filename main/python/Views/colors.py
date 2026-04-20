@@ -1,0 +1,22 @@
+COLORS = {
+    "bg_primary":    "#ffffff",
+    "bg_secondary":  "#f5f5f4",
+    "bg_tertiary":   "#eeece6",
+    "text_primary":  "#1a1a18",
+    "text_secondary":"#5f5e5a",
+    "text_tertiary": "#9a9890",
+    "border":        "rgba(0,0,0,0.10)",
+    "blue":          "#185FA5",
+    "blue_light":    "#E6F1FB",
+    "green":         "#3B6D11",
+    "green_light":   "#EAF3DE",
+    "amber":         "#854F0B",
+    "amber_light":   "#FAEEDA",
+    "coral":         "#993C1D",
+    "coral_light":   "#FAECE7",
+    "status_green":  "#639922",
+    "density_a":     "#97C459",
+    "density_b":     "#378ADD",
+    "density_c":     "#EF9F27",
+    "density_d":     "#D85A30"
+}
