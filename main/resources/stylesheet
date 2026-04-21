@@ -1,0 +1,14 @@
+
+QWidget {
+    background-color: #eeece6;
+    color: #1a1a18;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 13px;
+}
+QScrollArea { border: none; background: transparent; }
+QScrollBar:vertical { width: 6px; background: transparent; }
+QScrollBar::handle:vertical {
+    background: #c8c6c0; border-radius: 3px; min-height: 20px;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }

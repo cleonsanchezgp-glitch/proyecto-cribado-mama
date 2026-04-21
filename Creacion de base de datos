@@ -1,0 +1,63 @@
+
+-- CREACION DEL USUARIO PRINCIPAL PARA LA BASE DE DATOS
+
+
+-- base de datos "FreePDB1"
+ALTER SESSION SET CONTAINER = FREEPDB1;
+
+-- Crear el usuario
+CREATE USER CMAMA_DB_USR IDENTIFIED BY root;
+
+-- Otorgar permiso para conectar
+GRANT CREATE SESSION TO CMAMA_DB_USR;
+
+-- Otorgar permiso para crear sus propias cosas (tablas, vistas, etc.)
+GRANT CREATE TABLE, CREATE VIEW, CREATE SEQUENCE, CREATE PROCEDURE TO CMAMA_DB_USR;
+
+-- IMPORTANTE: Darle espacio ilimitado en su propio almacenamiento (tablespace)
+-- Sin esto, podrá crear la tabla pero no insertar datos.
+ALTER USER CMAMA_DB_USR QUOTA UNLIMITED ON USERS;
+
+--CRACION  DE LA ESTRUCTURA DE BASE DE DATOS
+
+-- TABLA PACIENTE
+
+CREATE TABLE PACIENTE (
+    id_paciente      NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre           VARCHAR2(100) NOT NULL,
+    edad             NUMBER(3),        -- Cambiado a número (ej. 45)
+    espesor_mama     NUMBER(10)        -- int
+);
+
+--TABLA ESTUDIO
+
+CREATE TABLE ESTUDIO (
+    id_estudio              NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_paciente             NUMBER NOT NULL, 
+    tipo_actividad          VARCHAR2(100),
+    prestacion_realizada    VARCHAR2(200),
+    hora_adquisicion        TIMESTAMP,        -- Para guardar hora exacta con segundos
+    fecha_realizacion       DATE,             -- Para la fecha del calendario
+    lateralidad             VARCHAR2(50),
+    proyeccion              VARCHAR2(50),
+    fuerza_compresion       VARCHAR2(50),
+    tension_tubo            NUMBER(10),       -- int
+    corriente_tubo          NUMBER(10),       -- int
+    carga                   BINARY_DOUBLE,    -- double
+    tiempo_exposicion       BINARY_DOUBLE,    -- double
+    filtro                  VARCHAR2(50),
+    kerma_entrada           BINARY_DOUBLE,    -- double
+    dosis_glandular         BINARY_DOUBLE,    -- double
+    distancia_foco_paciente VARCHAR2(50),
+    distancia_foco_mama     VARCHAR2(50),
+    factor_magnificacion    BINARY_DOUBLE,    -- double
+    rejilla                 VARCHAR2(50),
+    temperatura             BINARY_DOUBLE,    -- double
+    grupo_espesor           VARCHAR2(50),
+    
+    -- Relación: Un estudio pertenece a un paciente
+    CONSTRAINT fk_estudio_paciente 
+        FOREIGN KEY (id_paciente) 
+        REFERENCES PACIENTE(id_paciente)
+        ON DELETE CASCADE
+);
