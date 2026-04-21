@@ -1,2 +1,23 @@
+from datetime import date
+from typing import List
 
-private String nombre; 
+from main.python.Models import Estudio
+
+
+class Paciente:
+    #tengo que agregar un id paciente 
+    def __init__(self, nombre: str, edad: int, espesor_mama: int):
+        self.nombre = nombre
+        self.edad = edad
+        self.espesor_mama = espesor_mama
+        # Lista para agrupar todas las exposiciones/proyecciones
+        self.estudios: List[Estudio] = [] #
+
+    def agregar_estudio(self, estudio: Estudio):
+        #.append es lo mismo que el .add en java
+        self.estudios.append(estudio)
+
+    def __str__(self):
+        return (f"Paciente: {self.nombre} ({self.edad} años) | "
+                f"Esepesor de la Mama: {self.espesor_mama} | "
+                f"Exposiciones: {len(self.estudios)}")
