@@ -1,19 +1,9 @@
 import pandas as pd
 from datetime import datetime
 import os
-import importlib.util
 
 from main.python.Models.Paciente import Paciente
-
-def _cargar_modulo(nombre, ruta_relativa):
-    ruta = os.path.join(os.path.dirname(__file__), ruta_relativa)
-    spec = importlib.util.spec_from_file_location(nombre, ruta)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-paciente = _cargar_modulo("Paciente", "Paciente.py").Paciente
-estudio  = _cargar_modulo("Estudio",  "Estudio.py").Estudio
+from main.python.Models.Estudio import Estudio
 
 
 class GestorPacientes:
@@ -90,7 +80,7 @@ class GestorPacientes:
                     espesor_mama = int(fila['Espesor de Mama Comprimida (mm)'])
                 )
 
-            estudio = estudio(
+            estudio = Estudio(
                 tipo_actividad          = str(fila['Tipo de Actividad']).strip(),
                 prestacion_realizada    = str(fila['Prestación Realizada']).strip(),
                 hora_adquisicion        = self._parsear_hora(fila['Hora de Adquisición']),

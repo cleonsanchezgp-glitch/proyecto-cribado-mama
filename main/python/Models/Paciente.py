@@ -1,7 +1,6 @@
-from datetime import date
 from typing import List
 
-from Estudio import Estudio
+from main.python.Models.Estudio import Estudio
 
 
 class Paciente:

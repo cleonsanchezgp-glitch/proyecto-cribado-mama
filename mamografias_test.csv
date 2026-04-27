@@ -1,51 +1,58 @@
-ID_Paciente,Fecha,Lateralidad,Dosis_Glandular,kVp,Espesor_Mama,Notas_Tecnico
-PAC-0001,2026-01-10 09:15,D,1.25,28,45,Exploración rutinaria
-PAC-0002,2026-01-10 09:20,I,1.8,29,50,Sin incidencias
-PAC-0003,2026-01-10 09:25,D,2.1,30,48,Paciente nerviosa
-PAC-0004,2026-01-10 09:30,I,1.95,28,47,Movimiento leve
-PAC-0005,2026-01-10 09:35,D,2.5,31,52,Repetición necesaria
-PAC-0006,2026-01-10 09:40,I,1.1,27,44,Correcto
-PAC-0007,2026-01-10 09:45,D,2.8,32,55,Alta densidad
-PAC-0008,2026-01-10 09:50,I,1.6,29,49,Sin incidencias
-PAC-0009,2026-01-10 09:55,D,2.2,30,51,Exploración correcta
-PAC-0010,2026-01-10 10:00,I,1.3,28,46,Paciente colaboradora
-PAC-0011,2026-01-10 10:05,D,2.0,30,50,Leve incomodidad
-PAC-0012,2026-01-10 10:10,I,1.75,29,48,Sin incidencias
-PAC-0013,2026-01-10 10:15,D,3.1,33,56,Revisión adicional
-PAC-0014,2026-01-10 10:20,I,0.95,27,43,Correcto
-PAC-0015,2026-01-10 10:25,D,1.45,28,47,Exploración rápida
-PAC-0016,2026-01-10 10:30,I,2.6,31,53,Alta densidad
-PAC-0017,2026-01-10 10:35,D,1.85,29,49,Sin incidencias
-PAC-0018,2026-01-10 10:40,I,2.3,30,52,Correcto
-PAC-0019,2026-01-10 10:45,D,3.2,34,57,Repetición técnica
-PAC-0020,2026-01-10 10:50,I,1.15,27,44,Sin incidencias
-PAC-0021,2026-01-10 10:55,D,2.45,31,53,Exploración correcta
-PAC-0022,2026-01-10 11:00,I,1.7,29,48,Paciente tranquila
-PAC-0023,2026-01-10 11:05,D,2.9,32,55,Alta densidad
-PAC-0024,2026-01-10 11:10,I,1.05,27,43,Correcto
-PAC-0025,2026-01-10 11:15,D,2.15,30,50,Sin incidencias
-PAC-0026,2026-01-10 11:20,I,1.55,28,47,Exploración correcta
-PAC-0027,2026-01-10 11:25,D,3.0,33,56,Revisión adicional
-PAC-0028,2026-01-10 11:30,I,1.25,28,45,Sin incidencias
-PAC-0029,2026-01-10 11:35,D,2.35,30,51,Correcto
-PAC-0030,2026-01-10 11:40,I,1.65,29,48,Paciente nerviosa
-PAC-0031,2026-01-10 11:45,D,2.75,32,54,Alta densidad
-PAC-0032,2026-01-10 11:50,I,1.2,28,46,Exploración rápida
-PAC-0033,2026-01-10 11:55,D,2.05,30,50,Sin incidencias
-PAC-0034,2026-01-10 12:00,I,1.9,29,49,Correcto
-PAC-0035,2026-01-10 12:05,D,3.3,34,58,Repetición técnica
-PAC-0036,2026-01-10 12:10,I,0.85,26,42,Correcto
-PAC-0037,2026-01-10 12:15,D,2.55,31,53,Alta densidad
-PAC-0038,2026-01-10 12:20,I,1.5,28,47,Sin incidencias
-PAC-0039,2026-01-10 12:25,D,2.25,30,51,Exploración correcta
-PAC-0040,2026-01-10 12:30,I,1.35,28,46,Paciente colaboradora
-PAC-0041,2026-01-10 12:35,D,2.65,31,53,Correcto
-PAC-0042,2026-01-10 12:40,I,1.75,29,48,Sin incidencias
-PAC-0043,2026-01-10 12:45,D,3.4,34,58,Revisión adicional
-PAC-0044,2026-01-10 12:50,I,1.1,27,44,Correcto
-PAC-0045,2026-01-10 12:55,D,2.1,30,50,Sin incidencias
-PAC-0005,2026-01-10 09:35,D,2.5,31,52,Repetición necesaria
-PAC-0010,2026-01-10 10:00,I,1.3,28,46,Paciente colaboradora
-PAC-0015,2026-01-10 10:25,D,1.45,28,47,Exploración rápida
-PAC-0020,2026-01-10 10:50,I,1.15,27,44,Sin incidencias
-PAC-0035,2026-01-10 12:05,D,3.3,34,58,Repetición técnica
+ID_Paciente,Fecha,Lateralidad,Dosis_Glandular,kVp,Espesor_Mama,Notas_Tecnico;;;
+PAC-0001,2026-01-10 09:15,D,1.25,28,45,Exploración rutinaria;;;
+PAC-0002,2026-01-10 09:20,I,1.8,29,50,Sin incidencias;;;
+PAC-0003,2026-01-10 09:25,D,2.1,30,48,Paciente nerviosa;;;
+PAC-0004,2026-01-10 09:30,I,1.95,28,47,Movimiento leve;;;
+PAC-0005,2026-01-10 09:35,D,2.5,31,52,Repetición necesaria;;;
+PAC-0006,2026-01-10 09:40,I,1.1,27,44,Correcto;;;
+PAC-0007,2026-01-10 09:45,D,2.8,32,55,Alta densidad;;;
+PAC-0008,2026-01-10 09:50,I,1.6,29,49,Sin incidencias;;;
+PAC-0009,2026-01-10 09:55,D,2.2,30,51,Exploración correcta;;;
+PAC-0010,2026-01-10 10:00,I,1.3,28,46,Paciente colaboradora;;;
+PAC-0011,2026-01-10 10:05,D,2.0,30,50,Leve incomodidad;;;
+PAC-0012,2026-01-10 10:10,I,1.75,29,48,Sin incidencias;;;
+PAC-0013,2026-01-10 10:15,D,3.1,33,56,Revisión adicional;;;
+PAC-0014,2026-01-10 10:20,I,0.95,27,43,Correcto;;;
+PAC-0015,2026-01-10 10:25,D,1.45,28,47,Exploración rápida;;;
+PAC-0016,2026-01-10 10:30,I,2.6,31,53,Alta densidad;;;
+PAC-0017,2026-01-10 10:35,D,1.85,29,49,Sin incidencias;;;
+PAC-0018,2026-01-10 10:40,I,2.3,30,52,Correcto;;;
+PAC-0019,2026-01-10 10:45,D,3.2,34,57,Repetición técnica;;;
+PAC-0020,2026-01-10 10:50,I,1.15,27,44,Sin incidencias;;;
+PAC-0021,2026-01-10 10:55,D,2.45,31,53,Exploración correcta;;;
+PAC-0022,2026-01-10 11:00,I,1.7,29,48,Paciente tranquila;;;
+PAC-0023,2026-01-10 11:05,D,2.9,32,55,Alta densidad;;;
+PAC-0024,2026-01-10 11:10,I,1.05,27,43,Correcto;;;
+PAC-0025,2026-01-10 11:15,D,2.15,30,50,Sin incidencias;;;
+PAC-0026,2026-01-10 11:20,I,1.55,28,47,Exploración correcta;;;
+PAC-0027,2026-01-10 11:25,D,3.0,33,56,Revisión adicional;;;
+PAC-0028,2026-01-10 11:30,I,1.25,28,45,Sin incidencias;;;
+PAC-0029,2026-01-10 11:35,D,2.35,30,51,Correcto;;;
+PAC-0030,2026-01-10 11:40,I,1.65,29,48,Paciente nerviosa;;;
+PAC-0031,2026-01-10 11:45,D,2.75,32,54,Alta densidad;;;
+PAC-0032,2026-01-10 11:50,I,1.2,28,46,Exploración rápida;;;
+PAC-0033,2026-01-10 11:55,D,2.05,30,50,Sin incidencias;;;
+PAC-0034,2026-01-10 12:00,I,1.9,29,49,Correcto;;;
+PAC-0035,2026-01-10 12:05,D,3.3,34,58,Repetición técnica;;;
+PAC-0036,2026-01-10 12:10,I,0.85,26,42,Correcto;;;
+PAC-0037,2026-01-10 12:15,D,2.55,31,53,Alta densidad;;;
+PAC-0038,2026-01-10 12:20,I,1.5,28,47,Sin incidencias;;;
+PAC-0039,2026-01-10 12:25,D,2.25,30,51,Exploración correcta;;;
+PAC-0040,2026-01-10 12:30,I,1.35,28,46,Paciente colaboradora;;;
+PAC-0041,2026-01-10 12:35,D,2.65,31,53,Correcto;;;
+PAC-0042,2026-01-10 12:40,I,1.75,29,48,Sin incidencias;;;
+PAC-0043,2026-01-10 12:45,D,3.4,34,58,Revisión adicional;;;
+PAC-0044,2026-01-10 12:50,I,1.1,27,44,Correcto;;;
+PAC-0045,2026-01-10 12:55,D,2.1,30,50,Sin incidencias;;;
+PAC-0005,2026-01-10 09:35,D,2.5,31,52,Repetición necesaria;;;
+PAC-0010,2026-01-10 10:00,I,1.3,28,46,Paciente colaboradora;;;
+PAC-0015,2026-01-10 10:25,D,1.45,28,47,Exploración rápida;;;
+PAC-0020,2026-01-10 10:50,I,1.15,27,44,Sin incidencias;;;
+PAC-0035,2026-01-10 12:05,D,3.3,34,58,Repetición técnica;;;
+asdsdas;;h;Repetición;;;
+;;;
+;;;
+;;;
+;;;
+;;;
+;;;
