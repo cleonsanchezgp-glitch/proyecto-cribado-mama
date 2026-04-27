@@ -1,8 +1,7 @@
+from datetime import date
 from typing import List
 
-from main.python.Models.Estudio import Estudio
-
-
+from Estudio import Estudio
 
 
 class Paciente:
@@ -20,5 +19,5 @@ class Paciente:
 
     def __str__(self):
         return (f"Paciente: {self.nombre} ({self.edad} años) | "
-                f"Esepesor de la Mama: {self.espesor_mama} | "
+                f"Espesor de la Mama: {self.espesor_mama} | "
                 f"Exposiciones: {len(self.estudios)}")
