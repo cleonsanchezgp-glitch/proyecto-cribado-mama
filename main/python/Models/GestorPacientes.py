@@ -3,6 +3,8 @@ from datetime import datetime
 import os
 import importlib.util
 
+from main.python.Models.Paciente import Paciente
+
 def _cargar_modulo(nombre, ruta_relativa):
     ruta = os.path.join(os.path.dirname(__file__), ruta_relativa)
     spec = importlib.util.spec_from_file_location(nombre, ruta)
@@ -10,8 +12,8 @@ def _cargar_modulo(nombre, ruta_relativa):
     spec.loader.exec_module(mod)
     return mod
 
-Paciente = _cargar_modulo("Paciente", "Paciente.py").Paciente
-Estudio  = _cargar_modulo("Estudio",  "Estudio.py").Estudio
+paciente = _cargar_modulo("Paciente", "Paciente.py").Paciente
+estudio  = _cargar_modulo("Estudio",  "Estudio.py").Estudio
 
 
 class GestorPacientes:
@@ -88,7 +90,7 @@ class GestorPacientes:
                     espesor_mama = int(fila['Espesor de Mama Comprimida (mm)'])
                 )
 
-            estudio = Estudio(
+            estudio = estudio(
                 tipo_actividad          = str(fila['Tipo de Actividad']).strip(),
                 prestacion_realizada    = str(fila['Prestación Realizada']).strip(),
                 hora_adquisicion        = self._parsear_hora(fila['Hora de Adquisición']),
