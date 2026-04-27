@@ -6,8 +6,8 @@ from Estudio import Estudio
 
 class Paciente:
     #tengo que agregar un id paciente 
-    def __init__(self, nombre: str, edad: int, espesor_mama: int):
-        self.nombre = nombre
+    def __init__(self, id: str, edad: int, espesor_mama: int):
+        self.id = id
         self.edad = edad
         self.espesor_mama = espesor_mama
         # Lista para agrupar todas las exposiciones/proyecciones
@@ -18,6 +18,6 @@ class Paciente:
         self.estudios.append(estudio)
 
     def __str__(self):
-        return (f"Paciente: {self.nombre} ({self.edad} años) | "
+        return (f"Paciente: {self.id} ({self.edad} años) | "
                 f"Espesor de la Mama: {self.espesor_mama} | "
                 f"Exposiciones: {len(self.estudios)}")
