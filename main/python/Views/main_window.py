@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QMessageBox
 from main.python.Services.data_cleaner import limpiar_datos_ris
 from main.python.Services.data_calculator import calcular_dosis_pacientes
 from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos, obtener_datos_historial
+from main.python.Mappers.data_mapper import procesar_archivo_a_objetos
 
 from main.python.Services.config_modules import load_stylesheet
 from main.python.Views.colors import COLORS
@@ -140,85 +141,47 @@ class MainWindow(QMainWindow):
             self.stack.setCurrentWidget(view)
         self.topbar.set_title(self.TITLES.get(view_id, ""))
 
-
     def _ejecutar_limpieza(self):
         archivos = self.views["cargar"].selected_files
         
         if "ris" not in archivos:
-            QMessageBox.warning(self, "Falta archivo", "Por favor, carga primero el archivo en 'Informe RIS / CSV'.")
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Falta archivo", "Por favor, carga un archivo (CSV o Excel).")
             return
             
-        ruta_ris = archivos["ris"]
+        ruta_archivo = archivos["ris"]
         
-        # 3. script de Pandas para limpiar
-        exito = limpiar_datos_ris(ruta_ris)
+        # 1. Convertimos el archivo a un Array de Objetos
+        self.pacientes_db = procesar_archivo_a_objetos(ruta_archivo)
         
-        # 4. Si se ha limpiado, hacemos los cálculos
-        if exito:
-            import os
-            # Buscamos el archivo limpio que acaba de crear el paso anterior
-            directorio = os.path.dirname(ruta_ris)
-            ruta_limpio = os.path.join(directorio, "datos_ris_limpios.xlsx")
-            
-            exito_calculo, ruta_final = calcular_dosis_pacientes(ruta_limpio)
-            
-            if exito_calculo:
-                # Generamos las métricas
-                metricas = obtener_metricas_dashboard(ruta_limpio, ruta_final)
-                
-                self.views["resumen"].populate_metrics(metricas)
-                
-                pasos = [
-                    {"state": "done",   "detail": "CSV cargado y verificado"},
-                    {"state": "done",   "detail": f"{metricas[2]['value']} registros limpios"},
-                    {"state": "done",   "detail": "Dosis AGD y Efectiva calculada"},
-                    {"state": "active", "detail": "Listo para generar gráficos"},
-                    {"state": "",       "detail": "Exportación pendiente"}
-                ]
-                self.views["resumen"].populate_steps(pasos)
+        if not self.pacientes_db:
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Error", "No se pudo procesar el archivo o está vacío.")
+            return
 
-                # ALERTA DE ÉXITO
-                alertas = [
-                    {
-                        "style": "blue", 
-                        "title": "Análisis Completado", 
-                        "subtitle": f"Se han procesado {metricas[0]['value']} pacientes con éxito."
-                    }
-                ]
-                # Si la dosis media es alta (ej. mayor a 2.0), lanzamos un aviso amarillo
-                if float(metricas[1]['value'].replace(',', '.')) > 2.0:
-                    alertas.append({
-                        "style": "amber", 
-                        "title": "Aviso de Dosis", 
-                        "subtitle": "La dosis media de este lote es superior a 2.0 mGy"
-                    })
+        # 2. Rellenamos la Vista Resumen con los datos de los Objetos
+        metricas = obtener_metricas_dashboard(self.pacientes_db)
+        self.views["resumen"].populate_metrics(metricas)
+        
+        datos_densidad, datos_grafico = obtener_datos_graficos(self.pacientes_db)
+        self.views["resumen"].populate_density(datos_densidad)
+        self.views["resumen"].populate_chart(datos_grafico)
+        
+        pasos = [
+            {"state": "done", "detail": "Archivo cargado en memoria"},
+            {"state": "done", "detail": f"{len(self.pacientes_db)} Pacientes (Objetos) creados"},
+            {"state": "done", "detail": "Datos listos en Array"},
+            {"state": "active", "detail": "Listo para Base de Datos"},
+            {"state": "", "detail": "Exportación pendiente"}
+        ]
+        self.views["resumen"].populate_steps(pasos)
 
-                self.views["resumen"].populate_alerts(alertas)
-                
-                datos_densidad, datos_grafico = obtener_datos_graficos(ruta_limpio)
-                self.views["resumen"].populate_density(datos_densidad)
-                self.views["resumen"].populate_chart(datos_grafico)
+        # 3. Rellenamos la Vista Historial
+        self.datos_tabla = obtener_datos_historial(self.pacientes_db)
+        self.views["historial"].populate_table(self.datos_tabla)
 
-                # Enviar datos a la pestaña Historial
-                self.datos_tabla = obtener_datos_historial(ruta_limpio, ruta_final)
-                self.views["historial"].populate_table(self.datos_tabla)
-                
-                # Cambiamos automáticamente a la pestaña de "Resumen"
-                self._on_nav("resumen")
-                
-                QMessageBox.information(self, "Proceso Completado", "¡Datos procesados y dashboard actualizado!")
-                
-                # Se las pasamos a la pantalla de resumen
-                self.views["resumen"].populate_metrics(metricas)
-                
-                # Cambiamos automáticamente a la pestaña de "Resumen"
-                self._on_nav("resumen")
-                
-                QMessageBox.information(self, "Proceso Completado", "¡Datos procesados y dashboard actualizado!")
-            else:
-                QMessageBox.critical(self, "Error", "Fallo al calcular las dosis. Revisa la consola.")
-        else:
-            QMessageBox.critical(self, "Error", "Hubo un problema al procesar el archivo. Revisa la consola.")
+        # 4. Cambiamos de pantalla
+        self._on_nav("resumen")
 
     def _al_pulsar_chip(self, nombre_pulsado):
         # 1. Hacemos que se comporten como "Radio Buttons" (solo se queda encendido el que pulsas)
