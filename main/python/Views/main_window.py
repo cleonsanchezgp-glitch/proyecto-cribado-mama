@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtWidgets import QMessageBox
 from main.python.Services.data_cleaner import limpiar_datos_ris
 from main.python.Services.data_calculator import calcular_dosis_pacientes
-from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos
+from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos, obtener_datos_historial
 
 from main.python.Services.config_modules import load_stylesheet
 from main.python.Views.colors import COLORS
@@ -117,6 +117,13 @@ class MainWindow(QMainWindow):
 
         # ── PUNTO DE CONEXIÓN: Añade aquí tus controllers e inicialización ──
         self.views["cargar"].process_btn.clicked.connect(self._ejecutar_limpieza)
+        # Conectar el buscador del historial a la nueva función maestra
+        self.views["historial"].search_input.textChanged.connect(self._actualizar_tabla_historial)
+        
+        # Conectar los botones de densidad (Chips)
+        for nombre, chip in self.views["historial"].filter_chips.items():
+            chip.clicked.connect(lambda checked=False, n=nombre: self._al_pulsar_chip(n))
+
         # self._init_controllers()
         # self._load_initial_data()
 
@@ -188,6 +195,10 @@ class MainWindow(QMainWindow):
                 datos_densidad, datos_grafico = obtener_datos_graficos(ruta_limpio)
                 self.views["resumen"].populate_density(datos_densidad)
                 self.views["resumen"].populate_chart(datos_grafico)
+
+                # Enviar datos a la pestaña Historial
+                self.datos_tabla = obtener_datos_historial(ruta_limpio, ruta_final)
+                self.views["historial"].populate_table(self.datos_tabla)
                 
                 # Cambiamos automáticamente a la pestaña de "Resumen"
                 self._on_nav("resumen")
@@ -205,6 +216,49 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Error", "Fallo al calcular las dosis. Revisa la consola.")
         else:
             QMessageBox.critical(self, "Error", "Hubo un problema al procesar el archivo. Revisa la consola.")
+
+    def _al_pulsar_chip(self, nombre_pulsado):
+        # 1. Hacemos que se comporten como "Radio Buttons" (solo se queda encendido el que pulsas)
+        for nombre, chip in self.views["historial"].filter_chips.items():
+            chip.setChecked(nombre == nombre_pulsado)
+            
+        # 2. Le decimos a la tabla que se actualice con el nuevo filtro
+        self._actualizar_tabla_historial()
+
+    def _actualizar_tabla_historial(self, *args):
+        # Si aún no hay datos cargados, no hacemos nada
+        if not hasattr(self, 'datos_tabla'):
+            return
+            
+        # Qué texto hay en el buscador
+        texto = self.views["historial"].search_input.text().lower()
+        
+        # Averiguar qué chip está encendido ahora mismo
+        filtro_activo = "Todos"
+        for nombre, chip in self.views["historial"].filter_chips.items():
+            if chip.isChecked():
+                filtro_activo = nombre
+                break
+                
+        # Filtramos la lista maestra
+        filas_filtradas = []
+        for fila in self.datos_tabla:
+            # Condición 1: El texto del buscador encaja con el ID
+            pasa_texto = texto in fila['id'].lower()
+            
+            # Condición 2: La densidad del paciente encaja con el botón pulsado
+            if filtro_activo == "Todos":
+                pasa_densidad = True
+            else:
+                # Si pulsaste "Tipo A", le quitamos el "Tipo " para compararlo con la "A" de la fila
+                letra_densidad = filtro_activo.replace("Tipo ", "")
+                pasa_densidad = (fila['density'] == letra_densidad)
+                
+            # Si el paciente cumple ambas cosas, se muestra en la tabla
+            if pasa_texto and pasa_densidad:
+                filas_filtradas.append(fila)
+                
+        self.views["historial"].populate_table(filas_filtradas)
 
     # ── MÉTODOS A IMPLEMENTAR ──────────────────────────────────────────────
 

@@ -47,6 +47,48 @@ def obtener_metricas_dashboard(ruta_limpio, ruta_resultados):
         print(f"Error generando métricas: {e}")
         return []
 
+def obtener_datos_historial(ruta_limpio, ruta_resultados):
+    try:
+        df_limpio = pd.read_excel(ruta_limpio)
+        df_resultados = pd.read_excel(ruta_resultados)
+        
+        # Juntamos los datos usando el ID del paciente
+        df_completo = pd.merge(df_resultados, df_limpio.drop_duplicates(subset=['ID_Paciente']), on='ID_Paciente', how='left')
+        
+        # Volvemos a deducir la densidad (por si no estaba)
+        if 'Densidad' not in df_completo.columns:
+            condiciones = [
+                df_completo['Espesor_Mama'] < 45,
+                (df_completo['Espesor_Mama'] >= 45) & (df_completo['Espesor_Mama'] < 55),
+                (df_completo['Espesor_Mama'] >= 55) & (df_completo['Espesor_Mama'] < 65),
+                df_completo['Espesor_Mama'] >= 65
+            ]
+            opciones = ['A', 'B', 'C', 'D'] # La vista añade "Tipo " automáticamente
+            df_completo['Densidad'] = np.select(condiciones, opciones, default='B')
+            
+        filas_historial = []
+        for index, row in df_completo.iterrows():
+            # Si la dosis es alta (> 2.0), lo marcamos para "revisar"
+            estado = "revisar" if row['Dosis_Glandular_Total'] > 2.0 else "ok"
+            
+            # Como en nuestro Excel de prueba no pusimos Edad, nos la inventamos para la demo (ej: 55)
+            # (Si en tu Excel real está, cámbialo por row['Edad'])
+            edad = 55 
+            
+            filas_historial.append({
+                "id": str(row['ID_Paciente']),
+                "age": edad,
+                "density": str(row['Densidad']),
+                "agd": float(row['Dosis_Glandular_Total']),
+                "date": str(row['Fecha']).split(' ')[0], # Solo la fecha, sin la hora
+                "status": estado
+            })
+            
+        return filas_historial
+    except Exception as e:
+        print(f"Error generando datos para historial: {e}")
+        return []
+
 def obtener_datos_graficos(ruta_limpio):
     try:
         df = pd.read_excel(ruta_limpio)
