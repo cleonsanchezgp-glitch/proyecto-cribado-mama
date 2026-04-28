@@ -1,22 +1,23 @@
 from typing import List
 
 from main.python.Models.Estudio import Estudio
-
+# Asegúrate de que la ruta de importación sea correcta según tu estructura de carpetas
+# from main.python.Models.Estudio import Estudio 
 
 class Paciente:
-    #tengo que agregar un id paciente 
-    def __init__(self, id: str, edad: int, espesor_mama: int):
-        self.id = id
-        self.edad = edad
-        self.espesor_mama = espesor_mama
-        # Lista para agrupar todas las exposiciones/proyecciones
-        self.estudios: List[Estudio] = [] #
+    def __init__(self, id: str, edad: str, espesor_mama_actual: int):
+        self.id = id # DNI (String)
+        self.edad = edad # String según tu especificación
+        self.espesor_mama_actual = int(espesor_mama_actual)
+        self.estudios: List[Estudio] = []
 
     def agregar_estudio(self, estudio: Estudio):
-        #.append es lo mismo que el .add en java
+        """Añade un objeto de tipo Estudio a la lista del paciente."""
         self.estudios.append(estudio)
 
     def __str__(self):
-        return (f"Paciente: {self.id} ({self.edad} años) | "
-                f"Espesor de la Mama: {self.espesor_mama} | "
-                f"Exposiciones: {len(self.estudios)}")
+        return (
+            f"Paciente: {self.id} | Edad: {self.edad} | "
+            f"Espesor Actual: {self.espesor_mama_actual}mm | "
+            f"Total Estudios: {len(self.estudios)}"
+        )
