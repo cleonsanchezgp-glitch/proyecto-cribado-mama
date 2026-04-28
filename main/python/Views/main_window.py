@@ -14,6 +14,7 @@ from main.python.Views.utils import Sidebar, Topbar
 from main.python.Views.view_cargar import ViewCargar
 from main.python.Views.view_config import ViewConfig
 from main.python.Views.view_dosis import ViewDosis
+from main.python.Views.view_exportar import ViewExportar
 from main.python.Views.view_hisotrial import ViewHistorial
 from main.python.Views.view_resumen import ViewResumen
 
@@ -46,6 +47,7 @@ class MainWindow(QMainWindow):
         "dosis":     "Análisis de dosis",
         "historial": "Historial de exploraciones",
         "cargar":    "Cargar archivos",
+        "exportar":  "Exportar datos",
         "config":    "Configuración",
     }
 
@@ -103,6 +105,7 @@ class MainWindow(QMainWindow):
             "dosis":     ViewDosis(),      # Vista de análisis de dosis AGD
             "historial": ViewHistorial(),  # Vista de tabla de pacientes
             "cargar":    ViewCargar(),     # Vista de carga de archivos
+            "exportar":  ViewExportar(),    # Vista de exportación de datos
             "config":    ViewConfig(),     # Vista de configuración y parámetros
         }
         for view in self.views.values():

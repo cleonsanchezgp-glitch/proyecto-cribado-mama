@@ -1,12 +1,16 @@
-from datetime import time
+from datetime import datetime
 
 class Estudio:
-
-    # SELF es lo mismo que el this en java
-    #En python no se declaran las variables antes del constructor, se declaran y se crean dentro del mismo constructor
-    def __init__(self, tipo_actividad: str, prestacion_realizada: str, hora_adquisicion: time, fecha_realizacion: time, lateralidad: str, proyeccion: str, fuerza_compresion: str, 
-                 tension_tubo: int, corriente_tubo: int, carga: float, tiempo_exposicion: float, filtro: str, kerma_entrada: float, dosis_glandular: float, distancia_foco_paciente: float,
-                 distancia_foco_mama: str, factor_magnificacion: float, rejilla: str, temperatura: float, grupo_espesor: str):
+    def __init__(self, id_paciente: str, tipo_actividad: str, prestacion_realizada: str, 
+                 hora_adquisicion: datetime, fecha_realizacion: datetime, lateralidad: str, 
+                 proyeccion: str, fuerza_compresion: str, tension_tubo: int, 
+                 espesor_mama_estudio: int, corriente_tubo: int, carga: float, 
+                 tiempo_exposicion: float, filtro: str, kerma_entrada: float, 
+                 dosis_glandular: float, distancia_foco_paciente: str, 
+                 distancia_foco_mama: str, factor_magnificacion: float, 
+                 rejilla: str, temperatura: float):
+        
+        self.id_paciente = id_paciente # FK
         self.tipo_actividad = tipo_actividad
         self.prestacion_realizada = prestacion_realizada
         self.hora_adquisicion = hora_adquisicion
@@ -14,42 +18,24 @@ class Estudio:
         self.lateralidad = lateralidad
         self.proyeccion = proyeccion
         self.fuerza_compresion = fuerza_compresion
-        self.tension_tubo = tension_tubo
-        self.corriente_tubo = corriente_tubo
+        self.tension_tubo = int(tension_tubo)
+        self.espesor_mama_estudio = int(espesor_mama_estudio)
+        self.corriente_tubo = int(corriente_tubo)
         self.carga = float(carga)
         self.tiempo_exposicion = float(tiempo_exposicion)
         self.filtro = filtro
         self.kerma_entrada = float(kerma_entrada)
         self.dosis_glandular = float(dosis_glandular)
-        self.distancia_foco_paciente = float(distancia_foco_paciente)
+        self.distancia_foco_paciente = distancia_foco_paciente
         self.distancia_foco_mama = distancia_foco_mama
         self.factor_magnificacion = float(factor_magnificacion)
         self.rejilla = rejilla
         self.temperatura = float(temperatura)
-        self.grupo_espesor = grupo_espesor
 
     def __repr__(self):
-         return (
-        f"Estudio( "
-        f"tipo_actividad = {self.tipo_actividad}, "
-        f"prestacion_realizada = {self.prestacion_realizada}, "
-        f"hora_adquisicion = {self.hora_adquisicion}, \n"
-        f"fecha_realizacion = {self.fecha_realizacion}, "
-        f"lateralidad = {self.lateralidad}, "
-        f"proyeccion = {self.proyeccion}, \n"
-        f"fuerza_compresion = {self.fuerza_compresion}, "
-        f"tension_tubo = {self.tension_tubo}, "
-        f"corriente_tubo = {self.corriente_tubo}, \n"
-        f"carga = {self.carga}, "
-        f"tiempo_exposicion = {self.tiempo_exposicion}, "
-        f"filtro = {self.filtro}, \n"
-        f"kerma_entrada = {self.kerma_entrada}, "
-        f"dosis_glandular = {self.dosis_glandular}, "
-        f"distancia_foco_paciente = {self.distancia_foco_paciente}, \n"
-        f"distancia_foco_mama = {self.distancia_foco_mama}, "
-        f"factor_magnificacion = {self.factor_magnificacion}, "
-        f"rejilla = {self.rejilla}, \n"
-        f"temperatura = {self.temperatura}, "
-        f"grupo_espesor = {self.grupo_espesor}"
-        f")\n"
-    )
+        return (
+            f"Estudio(id_paciente={self.id_paciente}, tipo={self.tipo_actividad}, "
+            f"prestacion={self.prestacion_realizada}, fecha={self.fecha_realizacion}, "
+            f"lat={self.lateralidad}, proy={self.proyeccion}, kVp={self.tension_tubo}, "
+            f"espesor_estudio={self.espesor_mama_estudio}, mAs={self.carga})"
+        )

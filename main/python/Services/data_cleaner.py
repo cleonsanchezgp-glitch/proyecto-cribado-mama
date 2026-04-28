@@ -16,7 +16,9 @@ def limpiar_datos_ris(ruta_archivo):
             
         print(f"Archivo cargado. Filas iniciales: {len(df)}")
         
-        # 2. Eliminar duplicados
+        # 2. Eliminar duplicados y filas vacías
+        df.drop_duplicates(inplace=True)
+        df.dropna(inplace=True)
         # 3. Guardar el archivo limpio (Lo guardamos siempre como Excel para que sea más fácil de abrir)
         directorio = os.path.dirname(ruta_archivo)
         ruta_salida = os.path.join(directorio, "datos_ris_limpios.xlsx")
