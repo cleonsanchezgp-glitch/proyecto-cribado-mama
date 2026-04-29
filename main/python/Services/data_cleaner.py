@@ -8,11 +8,11 @@ def limpiar_datos_ris(ruta_archivo):
         # 1. Detectar si es CSV o Excel y leerlo
         if ruta_archivo.lower().endswith('.csv'):
             try:
-                df = pd.read_csv(ruta_archivo)
+                df = pd.read_csv(ruta_archivo, header=2)
             except:
-                df = pd.read_csv(ruta_archivo, sep=';')
+                df = pd.read_csv(ruta_archivo, sep=';', header=2)
         else:
-            df = pd.read_excel(ruta_archivo)
+            df = pd.read_excel(ruta_archivo, header=2)
             
         print(f"Archivo cargado. Filas iniciales: {len(df)}")
         

@@ -8,6 +8,11 @@ from main.python.Services.data_cleaner import limpiar_datos_ris
 from main.python.Services.data_calculator import calcular_dosis_pacientes
 from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos
 
+from main.python.Services.paciente_controller import paciente_controller
+from main.python.Services.dosis_controller import dosis_controller
+
+
+
 from main.python.Services.config_modules import load_stylesheet
 from main.python.Views.colors import COLORS
 from main.python.Views.utils import Sidebar, Topbar
@@ -152,59 +157,40 @@ class MainWindow(QMainWindow):
             
             exito_calculo, ruta_final = calcular_dosis_pacientes(ruta_limpio)
             
-            if exito_calculo:
-                # Generamos las métricas
-                metricas = obtener_metricas_dashboard(ruta_limpio, ruta_final)
-                
-                self.views["resumen"].populate_metrics(metricas)
-                
-                pasos = [
-                    {"state": "done",   "detail": "CSV cargado y verificado"},
-                    {"state": "done",   "detail": f"{metricas[2]['value']} registros limpios"},
-                    {"state": "done",   "detail": "Dosis AGD y Efectiva calculada"},
-                    {"state": "active", "detail": "Listo para generar gráficos"},
-                    {"state": "",       "detail": "Exportación pendiente"}
-                ]
-                self.views["resumen"].populate_steps(pasos)
+        if exito_calculo:
+            metricas = obtener_metricas_dashboard(ruta_limpio, ruta_final)
+            self.views["resumen"].populate_metrics(metricas)
 
-                # ALERTA DE ÉXITO
-                alertas = [
-                    {
-                        "style": "blue", 
-                        "title": "Análisis Completado", 
-                        "subtitle": f"Se han procesado {metricas[0]['value']} pacientes con éxito."
-                    }
-                ]
-                # Si la dosis media es alta (ej. mayor a 2.0), lanzamos un aviso amarillo
-                if float(metricas[1]['value'].replace(',', '.')) > 2.0:
-                    alertas.append({
-                        "style": "amber", 
-                        "title": "Aviso de Dosis", 
-                        "subtitle": "La dosis media de este lote es superior a 2.0 mGy"
-                    })
+            pasos = [
+                {"state": "done",   "detail": "CSV cargado y verificado"},
+                {"state": "done",   "detail": f"{metricas[2]['value']} registros limpios"},
+                {"state": "done",   "detail": "Dosis AGD y Efectiva calculada"},
+                {"state": "active", "detail": "Listo para generar gráficos"},
+                {"state": "",       "detail": "Exportación pendiente"}
+            ]
+            self.views["resumen"].populate_steps(pasos)
 
-                self.views["resumen"].populate_alerts(alertas)
-                
-                datos_densidad, datos_grafico = obtener_datos_graficos(ruta_limpio)
-                self.views["resumen"].populate_density(datos_densidad)
-                self.views["resumen"].populate_chart(datos_grafico)
-                
-                # Cambiamos automáticamente a la pestaña de "Resumen"
-                self._on_nav("resumen")
-                
-                QMessageBox.information(self, "Proceso Completado", "¡Datos procesados y dashboard actualizado!")
-                
-                # Se las pasamos a la pantalla de resumen
-                self.views["resumen"].populate_metrics(metricas)
-                
-                # Cambiamos automáticamente a la pestaña de "Resumen"
-                self._on_nav("resumen")
-                
-                QMessageBox.information(self, "Proceso Completado", "¡Datos procesados y dashboard actualizado!")
-            else:
-                QMessageBox.critical(self, "Error", "Fallo al calcular las dosis. Revisa la consola.")
+            alertas = [{"style": "blue", "title": "Análisis Completado",
+                        "subtitle": f"Se han procesado {metricas[0]['value']} pacientes con éxito."}]
+            if float(metricas[1]['value'].replace(',', '.')) > 2.0:
+                alertas.append({"style": "amber", "title": "Aviso de Dosis",
+                                "subtitle": "La dosis media de este lote es superior a 2.0 mGy"})
+            self.views["resumen"].populate_alerts(alertas)
+
+            datos_densidad, datos_grafico = obtener_datos_graficos(ruta_limpio)
+            self.views["resumen"].populate_density(datos_densidad)
+            self.views["resumen"].populate_chart(datos_grafico)
+
+            # ── Pestaña Análisis de dosis ──────────────────────────────────
+            pac_ctrl = paciente_controller(ruta_limpio)
+            pac_ctrl.ejecutar()
+            dosis_controller(view=self.views["dosis"], pacientes=pac_ctrl.pacientes)
+
+            self._on_nav("resumen")
+            QMessageBox.information(self, "Proceso Completado", "¡Datos procesados y dashboard actualizado!")
+
         else:
-            QMessageBox.critical(self, "Error", "Hubo un problema al procesar el archivo. Revisa la consola.")
+            QMessageBox.critical(self, "Error", "Fallo al calcular las dosis. Revisa la consola.")
 
     # ── MÉTODOS A IMPLEMENTAR ──────────────────────────────────────────────
 
