@@ -3,9 +3,7 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QScrollArea, QStackedWidget
 )
-from PySide6.QtWidgets import QMessageBox
-from main.python.Services.data_cleaner import limpiar_datos_ris
-from main.python.Services.data_calculator import calcular_dosis_pacientes
+
 from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos, obtener_datos_historial
 from main.python.Mappers.data_mapper import procesar_archivo_a_objetos
 
@@ -151,7 +149,7 @@ class MainWindow(QMainWindow):
             
         ruta_archivo = archivos["ris"]
         
-        # 1. Convertimos el archivo a un Array de Objetos
+        # 1. Convertimos el archivo a Objetos en Memoria
         self.pacientes_db = procesar_archivo_a_objetos(ruta_archivo)
         
         if not self.pacientes_db:
@@ -159,29 +157,29 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", "No se pudo procesar el archivo o está vacío.")
             return
 
-        # 2. Rellenamos la Vista Resumen con los datos de los Objetos
+        # 2. Análisis y obtención de datos procesados
         metricas = obtener_metricas_dashboard(self.pacientes_db)
-        self.views["resumen"].populate_metrics(metricas)
-        
         datos_densidad, datos_grafico = obtener_datos_graficos(self.pacientes_db)
+        self.datos_tabla = obtener_datos_historial(self.pacientes_db)
+
+        # 3. Actualización de los componentes de las Vistas
+        self.views["resumen"].populate_metrics(metricas)
         self.views["resumen"].populate_density(datos_densidad)
-        self.views["resumen"].populate_chart(datos_grafico)
+        self.views["resumen"].populate_chart(datos_grafico) # El gráfico de barras funcional
         
         pasos = [
             {"state": "done", "detail": "Archivo cargado en memoria"},
-            {"state": "done", "detail": f"{len(self.pacientes_db)} Pacientes (Objetos) creados"},
-            {"state": "done", "detail": "Datos listos en Array"},
-            {"state": "active", "detail": "Listo para Base de Datos"},
+            {"state": "done", "detail": f"{len(self.pacientes_db)} Pacientes procesados"},
+            {"state": "done", "detail": "Análisis de dosis completado"},
+            {"state": "active", "detail": "Visualización lista"},
             {"state": "", "detail": "Exportación pendiente"}
         ]
         self.views["resumen"].populate_steps(pasos)
 
-        # 3. Rellenamos la Vista Historial
-        self.datos_tabla = obtener_datos_historial(self.pacientes_db)
+        # 4. Actualización del Historial y Navegación
         self.views["historial"].populate_table(self.datos_tabla)
-
-        # 4. Cambiamos de pantalla
         self._on_nav("resumen")
+
 
     def _al_pulsar_chip(self, nombre_pulsado):
         # 1. Hacemos que se comporten como "Radio Buttons" (solo se queda encendido el que pulsas)

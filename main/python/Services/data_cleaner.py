@@ -1,32 +1,67 @@
 import pandas as pd
 import os
+from main.python.Services import temporal_save_data
 
-def limpiar_datos_ris(ruta_archivo):
-    print(f"Iniciando limpieza del archivo: {ruta_archivo}")
+def calcular_dosis_pacientes(ruta_archivo_limpio):
+    """
+    Realiza los cálculos de dosimetría utilizando los objetos almacenados en la 
+    memoria global (temporal_save_data).
+    """
+    print(f"--- Iniciando cálculo de dosis desde memoria global ---")
     
     try:
-        # 1. Detectar si es CSV o Excel y leerlo
-        if ruta_archivo.lower().endswith('.csv'):
-            try:
-                df = pd.read_csv(ruta_archivo)
-            except:
-                df = pd.read_csv(ruta_archivo, sep=';')
-        else:
-            df = pd.read_excel(ruta_archivo)
-            
-        print(f"Archivo cargado. Filas iniciales: {len(df)}")
+        # 1. Extraemos los datos de los objetos Estudio en la memoria global
+        # Usamos los nombres de atributos de tu clase Estudio
+        datos_estudios = [
+            {
+                'ID_Paciente': est.id_paciente,
+                'Lateralidad': est.lateralidad,
+                'Dosis_Glandular': est.dosis_glandular
+            }
+            for est in temporal_save_data.estudios_memoria
+        ]
         
-        # 2. Eliminar duplicados y filas vacías
-        df.drop_duplicates(inplace=True)
-        df.dropna(inplace=True)
-        # 3. Guardar el archivo limpio (Lo guardamos siempre como Excel para que sea más fácil de abrir)
-        directorio = os.path.dirname(ruta_archivo)
-        ruta_salida = os.path.join(directorio, "datos_ris_limpios.xlsx")
+        if not datos_estudios:
+            print("Error: No hay datos cargados en la memoria global.")
+            return False, None
+
+        # 2. Creamos el DataFrame para cálculos
+        df = pd.DataFrame(datos_estudios)
         
-        df.to_excel(ruta_salida, index=False)
-        print(f"¡Éxito! Archivo limpio guardado en: {ruta_salida}")
-        return True
+        # 3. Agrupamos y sumamos
+        calculos = df.groupby(['ID_Paciente', 'Lateralidad'])['Dosis_Glandular'].sum().unstack(fill_value=0)
+        
+        # Mapeo de columnas según los valores que guardes en el objeto (D/I o Derecha/Izquierda)
+        mapeo_columnas = {
+            'D': 'Dosis_Mama_Derecha', 
+            'I': 'Dosis_Mama_Izquierda',
+            'Derecha': 'Dosis_Mama_Derecha',
+            'Izquierda': 'Dosis_Mama_Izquierda'
+        }
+        calculos = calculos.rename(columns=mapeo_columnas)
+        
+        # Aseguramos existencia de columnas para la suma total
+        for col in ['Dosis_Mama_Derecha', 'Dosis_Mama_Izquierda']:
+            if col not in calculos.columns:
+                calculos[col] = 0.0
+        
+        # 4. Cálculo de magnitudes derivadas
+        calculos['Dosis_Glandular_Total'] = calculos['Dosis_Mama_Derecha'] + calculos['Dosis_Mama_Izquierda']
+        
+        factor_tisular_mama = 0.12
+        calculos['Dosis_Efectiva'] = calculos['Dosis_Glandular_Total'] * factor_tisular_mama
+        
+        # 5. Exportación y retorno
+        resultados_finales = calculos.reset_index()
+        
+        directorio = os.path.dirname(ruta_archivo_limpio)
+        ruta_resultados = os.path.join(directorio, "resultados_dosimetria_pacientes.xlsx")
+        
+        resultados_finales.to_excel(ruta_resultados, index=False)
+        print(f"¡Cálculos terminados! Resultados exportados en: {ruta_resultados}")
+        
+        return True, ruta_resultados
         
     except Exception as e:
-        print(f"Error al limpiar los datos: {e}")
-        return False
+        print(f"Error en los cálculos desde memoria: {e}")
+        return False, None
