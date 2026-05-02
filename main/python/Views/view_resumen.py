@@ -88,7 +88,7 @@ class ViewResumen(QWidget):
         leg_l = QHBoxLayout(leg)
         leg_l.setContentsMargins(0, 4, 0, 0)
         leg_l.setSpacing(14)
-        for color, txt in [("#B5D4F4", "Año anterior"), ("#378ADD", "Año actual")]:
+        for color, txt in [("#B5D4F4", "Límite Ref."), ("#378ADD", "Dosis Media")]:
             dot = QLabel("■")
             dot.setStyleSheet(f"color:{color}; font-size:11px; background:transparent; border:none;")
             t = label(txt, 11, COLORS["text_secondary"])

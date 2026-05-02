@@ -135,6 +135,7 @@ class ProgressBar(QWidget):
             fr = r.adjusted(0, 0, -(r.width() - fill_w), 0)
             p.setBrush(QBrush(QColor(self._color)))
             p.drawRoundedRect(fr, 4, 4)
+        p.end()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -224,6 +225,7 @@ class BarChart(QWidget):
             p.setFont(font2)
             center_x = int(gx + bar_w + gap / 2)
             p.drawText(center_x - 22, h - margin_b + 6, 44, 14, Qt.AlignCenter, label_txt)
+        p.end()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -310,6 +312,7 @@ class ScatterPlot(QWidget):
             p.setPen(Qt.NoPen)
             p.setBrush(QBrush(color))
             p.drawEllipse(xp - 3, yp - 3, 7, 7)
+        p.end()
 
 
 # ══════════════════════════════════════════════════════════════════════════════

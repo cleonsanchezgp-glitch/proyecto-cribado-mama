@@ -72,7 +72,7 @@ class dosis_controller:
         puntos = []
         for paciente in self.pacientes:
             for estudio in paciente.estudios:
-                espesor = paciente.espesor_mama
+                espesor = paciente.espesor_mama_actual
                 agd = estudio.dosis_glandular
                 tipo = self._tipo_densidad(espesor)
                 puntos.append((espesor, agd, tipo))
@@ -101,7 +101,7 @@ class dosis_controller:
 
         for paciente in self.pacientes:
             for estudio in paciente.estudios:
-                tipo = self._tipo_densidad(paciente.espesor_mama)
+                tipo = self._tipo_densidad(paciente.espesor_mama_actual)
                 contadores[tipo][0] += 1  # total
                 if estudio.dosis_glandular <= limites_euref[tipo]:
                     contadores[tipo][1] += 1  # dentro del límite

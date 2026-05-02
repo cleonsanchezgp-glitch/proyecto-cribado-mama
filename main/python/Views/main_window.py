@@ -3,22 +3,17 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QScrollArea, QStackedWidget
 )
-from PySide6.QtWidgets import QMessageBox
-from main.python.Services.data_cleaner import limpiar_datos_ris
-from main.python.Services.data_calculator import calcular_dosis_pacientes
-from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos
 
-from main.python.Services.paciente_controller import paciente_controller
+from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos, obtener_datos_historial
+from main.python.Mappers.data_mapper import procesar_archivo_a_objetos
 from main.python.Services.dosis_controller import dosis_controller
-
-
-
 from main.python.Services.config_modules import load_stylesheet
 from main.python.Views.colors import COLORS
 from main.python.Views.utils import Sidebar, Topbar
 from main.python.Views.view_cargar import ViewCargar
 from main.python.Views.view_config import ViewConfig
 from main.python.Views.view_dosis import ViewDosis
+from main.python.Views.view_exportar import ViewExportar
 from main.python.Views.view_hisotrial import ViewHistorial
 from main.python.Views.view_resumen import ViewResumen
 
@@ -51,6 +46,7 @@ class MainWindow(QMainWindow):
         "dosis":     "Análisis de dosis",
         "historial": "Historial de exploraciones",
         "cargar":    "Cargar archivos",
+        "exportar":  "Exportar datos",
         "config":    "Configuración",
     }
 
@@ -108,6 +104,7 @@ class MainWindow(QMainWindow):
             "dosis":     ViewDosis(),      # Vista de análisis de dosis AGD
             "historial": ViewHistorial(),  # Vista de tabla de pacientes
             "cargar":    ViewCargar(),     # Vista de carga de archivos
+            "exportar":  ViewExportar(),    # Vista de exportación de datos
             "config":    ViewConfig(),     # Vista de configuración y parámetros
         }
         for view in self.views.values():
@@ -122,6 +119,13 @@ class MainWindow(QMainWindow):
 
         # ── PUNTO DE CONEXIÓN: Añade aquí tus controllers e inicialización ──
         self.views["cargar"].process_btn.clicked.connect(self._ejecutar_limpieza)
+        # Conectar el buscador del historial a la nueva función maestra
+        self.views["historial"].search_input.textChanged.connect(self._actualizar_tabla_historial)
+        
+        # Conectar los botones de densidad (Chips)
+        for nombre, chip in self.views["historial"].filter_chips.items():
+            chip.clicked.connect(lambda checked=False, n=nombre: self._al_pulsar_chip(n))
+
         # self._init_controllers()
         # self._load_initial_data()
 
@@ -135,62 +139,93 @@ class MainWindow(QMainWindow):
             self.stack.setCurrentWidget(view)
         self.topbar.set_title(self.TITLES.get(view_id, ""))
 
-
     def _ejecutar_limpieza(self):
         archivos = self.views["cargar"].selected_files
         
         if "ris" not in archivos:
-            QMessageBox.warning(self, "Falta archivo", "Por favor, carga primero el archivo en 'Informe RIS / CSV'.")
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Falta archivo", "Por favor, carga un archivo (CSV o Excel).")
             return
             
-        ruta_ris = archivos["ris"]
+        ruta_archivo = archivos["ris"]
         
-        # 3. script de Pandas para limpiar
-        exito = limpiar_datos_ris(ruta_ris)
+        # 1. Convertimos el archivo a Objetos en Memoria
+        self.pacientes_db = procesar_archivo_a_objetos(ruta_archivo)
         
-        # 4. Si se ha limpiado, hacemos los cálculos
-        if exito:
-            import os
-            # Buscamos el archivo limpio que acaba de crear el paso anterior
-            directorio = os.path.dirname(ruta_ris)
-            ruta_limpio = os.path.join(directorio, "datos_ris_limpios.xlsx")
+        if not self.pacientes_db:
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Error", "No se pudo procesar el archivo o está vacío.")
+            return
+
+        # 2. Análisis y obtención de datos procesados
+        metricas = obtener_metricas_dashboard(self.pacientes_db)
+        datos_densidad, datos_grafico = obtener_datos_graficos(self.pacientes_db)
+        self.datos_tabla = obtener_datos_historial(self.pacientes_db)
+
+        # 3. Actualización de los componentes de las Vistas
+        self.views["resumen"].populate_metrics(metricas)
+        self.views["resumen"].populate_density(datos_densidad)
+        self.views["resumen"].populate_chart(datos_grafico) # El gráfico de barras funcional
+        
+        pasos = [
+            {"state": "done", "detail": "Archivo cargado en memoria"},
+            {"state": "done", "detail": f"{len(self.pacientes_db)} Pacientes procesados"},
+            {"state": "done", "detail": "Análisis de dosis completado"},
+            {"state": "active", "detail": "Visualización lista"},
+            {"state": "", "detail": "Exportación pendiente"}
+        ]
+        self.views["resumen"].populate_steps(pasos)
+
+        # 4. Actualización del Historial y Navegación
+        self.views["historial"].populate_table(self.datos_tabla)
+
+        dosis_controller(view=self.views["dosis"], pacientes=self.pacientes_db)
+
+        self._on_nav("resumen")
+
+
+    def _al_pulsar_chip(self, nombre_pulsado):
+        # 1. Hacemos que se comporten como "Radio Buttons" (solo se queda encendido el que pulsas)
+        for nombre, chip in self.views["historial"].filter_chips.items():
+            chip.setChecked(nombre == nombre_pulsado)
             
-            exito_calculo, ruta_final = calcular_dosis_pacientes(ruta_limpio)
+        # 2. Le decimos a la tabla que se actualice con el nuevo filtro
+        self._actualizar_tabla_historial()
+
+    def _actualizar_tabla_historial(self, *args):
+        # Si aún no hay datos cargados, no hacemos nada
+        if not hasattr(self, 'datos_tabla'):
+            return
             
-        if exito_calculo:
-            metricas = obtener_metricas_dashboard(ruta_limpio, ruta_final)
-            self.views["resumen"].populate_metrics(metricas)
-
-            pasos = [
-                {"state": "done",   "detail": "CSV cargado y verificado"},
-                {"state": "done",   "detail": f"{metricas[2]['value']} registros limpios"},
-                {"state": "done",   "detail": "Dosis AGD y Efectiva calculada"},
-                {"state": "active", "detail": "Listo para generar gráficos"},
-                {"state": "",       "detail": "Exportación pendiente"}
-            ]
-            self.views["resumen"].populate_steps(pasos)
-
-            alertas = [{"style": "blue", "title": "Análisis Completado",
-                        "subtitle": f"Se han procesado {metricas[0]['value']} pacientes con éxito."}]
-            if float(metricas[1]['value'].replace(',', '.')) > 2.0:
-                alertas.append({"style": "amber", "title": "Aviso de Dosis",
-                                "subtitle": "La dosis media de este lote es superior a 2.0 mGy"})
-            self.views["resumen"].populate_alerts(alertas)
-
-            datos_densidad, datos_grafico = obtener_datos_graficos(ruta_limpio)
-            self.views["resumen"].populate_density(datos_densidad)
-            self.views["resumen"].populate_chart(datos_grafico)
-
-            # ── Pestaña Análisis de dosis ──────────────────────────────────
-            pac_ctrl = paciente_controller(ruta_limpio)
-            pac_ctrl.ejecutar()
-            dosis_controller(view=self.views["dosis"], pacientes=pac_ctrl.pacientes)
-
-            self._on_nav("resumen")
-            QMessageBox.information(self, "Proceso Completado", "¡Datos procesados y dashboard actualizado!")
-
-        else:
-            QMessageBox.critical(self, "Error", "Fallo al calcular las dosis. Revisa la consola.")
+        # Qué texto hay en el buscador
+        texto = self.views["historial"].search_input.text().lower()
+        
+        # Averiguar qué chip está encendido ahora mismo
+        filtro_activo = "Todos"
+        for nombre, chip in self.views["historial"].filter_chips.items():
+            if chip.isChecked():
+                filtro_activo = nombre
+                break
+                
+        # Filtramos la lista maestra
+        filas_filtradas = []
+        for fila in self.datos_tabla:
+            # Condición 1: El texto del buscador encaja con el ID
+            pasa_texto = texto in fila['id'].lower()
+            
+            # Condición 2: La densidad del paciente encaja con el botón pulsado
+            if filtro_activo == "Todos":
+                pasa_densidad = True
+            else:
+                # Si pulsaste "Tipo A", le quitamos el "Tipo " para compararlo con la "A" de la fila
+                letra_densidad = filtro_activo.replace("Tipo ", "")
+                pasa_densidad = (fila['density'] == letra_densidad)
+                
+            # Si el paciente cumple ambas cosas, se muestra en la tabla
+            if pasa_texto and pasa_densidad:
+                filas_filtradas.append(fila)
+                
+        self.views["historial"].populate_table(filas_filtradas)
 
     # ── MÉTODOS A IMPLEMENTAR ──────────────────────────────────────────────
 
