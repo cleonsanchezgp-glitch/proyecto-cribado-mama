@@ -1,4 +1,5 @@
-from datetime import time
+from datetime import  time
+
 
 class Estudio:
 
@@ -31,7 +32,6 @@ class Estudio:
         self.factor_magnificacion = float(factor_magnificacion)
         self.rejilla = rejilla
         self.temperatura = float(temperatura)
-        self.grupo_espesor = grupo_espesor
 
     def __repr__(self):
          return (

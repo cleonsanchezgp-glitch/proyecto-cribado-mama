@@ -22,40 +22,39 @@ ALTER USER CMAMA_DB_USR QUOTA UNLIMITED ON USERS;
 
 -- TABLA PACIENTE
 
+-- TABLA PACIENTE
 CREATE TABLE PACIENTE (
-    id_paciente      NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_paciente      VARCHAR2(20) PRIMARY KEY, -- DNI
     nombre           VARCHAR2(100) NOT NULL,
-    edad             NUMBER(3),        -- Cambiado a número (ej. 45)
-    espesor_mama     NUMBER(10)        -- int
+    edad             NUMBER(3),
+    espesor_mama     NUMBER(10)
 );
 
---TABLA ESTUDIO
-
+-- TABLA ESTUDIO
 CREATE TABLE ESTUDIO (
     id_estudio              NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_paciente             NUMBER NOT NULL, 
+    id_paciente             VARCHAR2(20) NOT NULL,
     tipo_actividad          VARCHAR2(100),
     prestacion_realizada    VARCHAR2(200),
-    hora_adquisicion        TIMESTAMP,        -- Para guardar hora exacta con segundos
-    fecha_realizacion       DATE,             -- Para la fecha del calendario
+    hora_adquisicion        TIMESTAMP,
+    fecha_realizacion       DATE,
     lateralidad             VARCHAR2(50),
     proyeccion              VARCHAR2(50),
     fuerza_compresion       VARCHAR2(50),
-    tension_tubo            NUMBER(10),       -- int
-    corriente_tubo          NUMBER(10),       -- int
-    carga                   BINARY_DOUBLE,    -- double
-    tiempo_exposicion       BINARY_DOUBLE,    -- double
+    tension_tubo            NUMBER(10),
+    corriente_tubo          NUMBER(10),
+    carga                   BINARY_DOUBLE,
+    tiempo_exposicion       BINARY_DOUBLE,
     filtro                  VARCHAR2(50),
-    kerma_entrada           BINARY_DOUBLE,    -- double
-    dosis_glandular         BINARY_DOUBLE,    -- double
+    kerma_entrada           BINARY_DOUBLE,
+    dosis_glandular         BINARY_DOUBLE,
     distancia_foco_paciente VARCHAR2(50),
     distancia_foco_mama     VARCHAR2(50),
-    factor_magnificacion    BINARY_DOUBLE,    -- double
+    factor_magnificacion    BINARY_DOUBLE,
     rejilla                 VARCHAR2(50),
-    temperatura             BINARY_DOUBLE,    -- double
+    temperatura             BINARY_DOUBLE,
     grupo_espesor           VARCHAR2(50),
-    
-    -- Relación: Un estudio pertenece a un paciente
+
     CONSTRAINT fk_estudio_paciente 
         FOREIGN KEY (id_paciente) 
         REFERENCES PACIENTE(id_paciente)

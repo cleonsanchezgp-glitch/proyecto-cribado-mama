@@ -70,11 +70,11 @@ class ViewHistorial(QWidget):
             if filt == "Todos":
                 chip.setChecked(True)   # "Todos" activo por defecto al arrancar
             chip.setStyleSheet(
-                f"QPushButton {{ background:transparent; border:0.5px solid rgba(0,0,0,0.18); "
-                "border-radius:99px; padding:0 10px; font-size:11px; "
-                f"color:{COLORS['text_secondary']}; }}"
-                f"QPushButton:checked {{ background:{COLORS['blue_light']}; border-color:{COLORS['blue']}; "
-                f"color:{COLORS['blue']}; font-weight:600; }}"
+                "QPushButton { background:transparent; border:1px solid rgba(0,0,0,0.18); "
+                "border-radius:14px; padding:4px 12px; font-size:12px; "
+                "color:#5f5e5a; font-weight:500; }"
+                f"QPushButton:checked {{ background:{COLORS['blue_light']}; border:1px solid {COLORS['blue']}; "
+                f"color:{COLORS['blue']}; font-weight:bold; }}"
             )
             sr.addWidget(chip)
             self.filter_chips[filt] = chip
@@ -95,11 +95,11 @@ class ViewHistorial(QWidget):
         )
         self.table.setStyleSheet(
             f"QTableWidget {{ background:{COLORS['bg_primary']}; border:none; "
-            "gridline-color:rgba(0,0,0,0.06); font-size:12px; }}"
-            f"QHeaderView::section {{ background:{COLORS['bg_secondary']}; color:{COLORS['text_tertiary']}; "
-            "font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; "
+            "gridline-color:rgba(0,0,0,0.06); font-size:12px; color:#1a1a18; }}"
+            f"QHeaderView::section {{ background:{COLORS['bg_secondary']}; color:#5f5e5a; "
+            "font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; "
             "border:none; border-bottom:0.5px solid rgba(0,0,0,0.08); padding:6px 10px; }}"
-            f"QTableWidget::item {{ padding:6px 10px; color:{COLORS['text_secondary']}; border:none; "
+            f"QTableWidget::item {{ padding:6px 10px; color:#1a1a18; border:none; "
             "border-bottom:0.5px solid rgba(0,0,0,0.06); }}"
             f"QTableWidget::item:selected {{ background:{COLORS['blue_light']}; color:{COLORS['blue']}; }}"
         )

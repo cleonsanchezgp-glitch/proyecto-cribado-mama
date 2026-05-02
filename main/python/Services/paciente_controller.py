@@ -1,8 +1,6 @@
 import pandas as pd
 from datetime import datetime
 import os
-import importlib.util
-
 from main.python.Models.Estudio import Estudio
 from main.python.Models.Paciente import Paciente
 from main.python.Services import data_cleaner
@@ -10,6 +8,8 @@ from main.python.Services import data_cleaner
 
 
 class paciente_controller:
+
+
 
 
 

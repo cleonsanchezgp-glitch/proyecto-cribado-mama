@@ -6,6 +6,9 @@ from PySide6.QtWidgets import (
 
 from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos, obtener_datos_historial
 from main.python.Mappers.data_mapper import procesar_archivo_a_objetos
+
+from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos, obtener_datos_historial
+from main.python.Mappers.data_mapper import procesar_archivo_a_objetos
 from main.python.Services.dosis_controller import dosis_controller
 from main.python.Services.config_modules import load_stylesheet
 from main.python.Views.colors import COLORS
