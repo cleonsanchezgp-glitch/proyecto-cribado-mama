@@ -1,8 +1,5 @@
 import numpy as np
 
-def calcular_dosis_total_paciente(paciente):
-    return sum(estudio.dosis_glandular for estudio in paciente.estudios)
-
 def deducir_densidad(espesor):
     if espesor < 45: return 'A'
     elif espesor < 55: return 'B'
@@ -11,7 +8,9 @@ def deducir_densidad(espesor):
 
 def obtener_metricas_dashboard(pacientes):
     if not pacientes: return []
-    dosis_totales = [calcular_dosis_total_paciente(p) for p in pacientes]
+    
+    # 💡 AQUÍ USAMOS EL NUEVO MÉTODO DEL OBJETO
+    dosis_totales = [p.calcular_dosis_glandular_total() for p in pacientes]
     registros_cruzados = sum(len(p.estudios) for p in pacientes)
     dosis_media = np.mean(dosis_totales) if dosis_totales else 0
     desviacion_std = np.std(dosis_totales) if len(dosis_totales) > 1 else 0.0
@@ -29,7 +28,8 @@ def obtener_datos_graficos(pacientes):
     
     for p in pacientes:
         tipo = deducir_densidad(p.espesor_mama_actual)
-        dosis = calcular_dosis_total_paciente(p)
+        # 💡 AQUÍ USAMOS EL NUEVO MÉTODO DEL OBJETO
+        dosis = p.calcular_dosis_glandular_total()
         datos_por_densidad[tipo].append(dosis)
         
     total_pacientes = len(pacientes)
@@ -51,8 +51,13 @@ def obtener_datos_graficos(pacientes):
 def obtener_datos_historial(pacientes):
     filas_historial = []
     for p in pacientes:
-        dosis_total = calcular_dosis_total_paciente(p)
-        estado = "revisar" if dosis_total > 2.0 else "ok"
+        # 💡 AQUÍ USAMOS EL NUEVO MÉTODO DEL OBJETO
+        dosis_total = p.calcular_dosis_glandular_total()
+        
+        # El límite de seguridad cambia según si el grosor es > 50mm o < 50mm
+        limite_seguridad = 3.0 if p.espesor_mama_actual > 50 else 2.0
+        estado = "revisar" if dosis_total > limite_seguridad else "ok"
+        
         fecha_str = p.estudios[0].fecha_realizacion if p.estudios else "Desconocida"
         
         filas_historial.append({
