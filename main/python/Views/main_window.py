@@ -121,6 +121,8 @@ class MainWindow(QMainWindow):
         self.views["cargar"].process_btn.clicked.connect(self._ejecutar_limpieza)
         # Conectar el buscador del historial a la nueva función maestra
         self.views["historial"].search_input.textChanged.connect(self._actualizar_tabla_historial)
+        # Conectar el clic en la tabla del historial al panel de detalles
+        self.views["historial"].table.itemSelectionChanged.connect(self._al_seleccionar_paciente)
         
         # Conectar los botones de densidad (Chips)
         for nombre, chip in self.views["historial"].filter_chips.items():
@@ -196,6 +198,34 @@ class MainWindow(QMainWindow):
             
         # 2. Le decimos a la tabla que se actualice con el nuevo filtro
         self._actualizar_tabla_historial()
+
+    def _al_seleccionar_paciente(self):
+        # Si aún no hay datos cargados, no hacemos nada
+        if not hasattr(self, 'pacientes_db') or not self.pacientes_db:
+            return
+
+        vista = self.views["historial"]
+        items_seleccionados = vista.table.selectedItems()
+        
+        # Si el usuario hace clic fuera o deselecciona, ocultamos el panel
+        if not items_seleccionados:
+            vista.panel_detalles.setVisible(False)
+            return
+            
+        # Sacamos el ID del paciente que está en la columna 0 de la fila pulsada
+        fila = items_seleccionados[0].row()
+        id_seleccionado = vista.table.item(fila, 0).text()
+        
+        # Buscamos al paciente en nuestra base de datos en memoria
+        paciente_encontrado = None
+        for p in self.pacientes_db:
+            if p.id == id_seleccionado:
+                paciente_encontrado = p
+                break
+                
+        # Si lo encontramos, le decimos a la vista que lo muestre
+        if paciente_encontrado:
+            vista.mostrar_detalles_paciente(paciente_encontrado)
 
     def _actualizar_tabla_historial(self, *args):
         # Si aún no hay datos cargados, no hacemos nada

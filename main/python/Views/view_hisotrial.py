@@ -1,55 +1,28 @@
 from PySide6.QtWidgets import (
     QLineEdit, QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
-    QTableWidget, QTableWidgetItem, QHeaderView
+    QTableWidget, QTableWidgetItem, QHeaderView, QLabel
 )
 from PySide6.QtGui import QColor, Qt
 from main.python.Views.colors import COLORS
 from main.python.Views.utils import Panel
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  VISTA: Historial de exploraciones
-#  Tabla de pacientes del lote con buscador y filtros por tipo de densidad.
-#
-#  ESTRUCTURA VISUAL:
-#    ┌──────────────────────────────────────────────────────┐
-#    │  [Buscador]  [Todos] [Tipo A] [Tipo B] [Tipo C] [Tipo D]  │
-#    ├──────────────────────────────────────────────────────┤
-#    │  ID Paciente │ Edad │ Densidad │ AGD │ Fecha │ Estado │
-#    │  ...         │ ...  │ ...      │ ... │ ...   │ ...    │
-#    └──────────────────────────────────────────────────────┘
-#
-#  ATRIBUTOS PÚBLICOS (conectar desde HistorialController):
-#    search_input          → QLineEdit: conectar .textChanged para filtrado en tiempo real
-#    filter_chips          → dict[str, QPushButton]: conectar .toggled por tipo
-#    table                 → QTableWidget: accesible si se necesita manipulación directa
-#
-#  MÉTODO DE DATOS:
-#    populate_table(rows)  → rellena la tabla con la lista de pacientes filtrada
-# ══════════════════════════════════════════════════════════════════════════════
-
 class ViewHistorial(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background:transparent;")
-        main = QVBoxLayout(self)
-        main.setContentsMargins(20, 20, 20, 20)
-        main.setSpacing(16)
+        
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(16)
 
-        # ── SECCIÓN 1: Buscador y chips de filtro ─────────────────────────
-        # El buscador filtra por ID de paciente en tiempo real.
-        # Los chips de densidad filtran la tabla por tipo (A/B/C/D).
-        # Conectar desde HistorialController:
-        #   view.search_input.textChanged.connect(ctrl.on_search)
-        #   view.filter_chips["Tipo A"].toggled.connect(ctrl.on_filter_tipo_a)
         search_row = QWidget()
         search_row.setStyleSheet("background:transparent;")
         sr = QHBoxLayout(search_row)
         sr.setContentsMargins(0, 0, 0, 0)
         sr.setSpacing(10)
 
-        # Campo de búsqueda por ID de paciente
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Buscar paciente…")
         self.search_input.setFixedHeight(34)
@@ -60,15 +33,13 @@ class ViewHistorial(QWidget):
         )
         sr.addWidget(self.search_input, 1)
 
-        # Chips de filtro por tipo de densidad
-        # self.filter_chips["Todos"] está activo por defecto
         self.filter_chips = {}
         for filt in ["Todos", "Tipo A", "Tipo B", "Tipo C", "Tipo D"]:
             chip = QPushButton(filt)
             chip.setCheckable(True)
             chip.setFixedHeight(28)
             if filt == "Todos":
-                chip.setChecked(True)   # "Todos" activo por defecto al arrancar
+                chip.setChecked(True) 
             chip.setStyleSheet(
                 "QPushButton { background:transparent; border:1px solid rgba(0,0,0,0.18); "
                 "border-radius:14px; padding:4px 12px; font-size:12px; "
@@ -79,13 +50,8 @@ class ViewHistorial(QWidget):
             sr.addWidget(chip)
             self.filter_chips[filt] = chip
 
-        main.addWidget(search_row)
+        main_layout.addWidget(search_row)
 
-        # ── SECCIÓN 2: Tabla de exploraciones recientes ───────────────────
-        # Tabla principal con una fila por paciente del lote.
-        # Las columnas son: ID, Edad, Densidad, AGD, Fecha, Estado.
-        # La columna Estado se colorea: azul=OK, amber=Revisar.
-        # Se rellena (y vacía/recarga) con populate_table(rows).
         table_panel = Panel("Exploraciones recientes")
         self.table = QTableWidget()
         self.table.setColumnCount(6)
@@ -103,41 +69,72 @@ class ViewHistorial(QWidget):
             "border-bottom:0.5px solid rgba(0,0,0,0.06); }}"
             f"QTableWidget::item:selected {{ background:{COLORS['blue_light']}; color:{COLORS['blue']}; }}"
         )
-        self.table.setSelectionBehavior(QTableWidget.SelectRows)    # Selección de fila completa
-        self.table.setEditTriggers(QTableWidget.NoEditTriggers)     # Solo lectura
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)  # Columnas que se expanden
-        self.table.verticalHeader().setVisible(False)               # Sin numeración de filas
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
         self.table.setAlternatingRowColors(False)
         self.table.setMinimumHeight(240)
         table_panel.body().addWidget(self.table)
-        main.addWidget(table_panel)
-        main.addStretch()
+        main_layout.addWidget(table_panel)
 
-    # ══════════════════════════════════════════════════════════════════════
-    #  MÉTODOS DE DATOS — Llamar desde HistorialController
-    # ══════════════════════════════════════════════════════════════════════
+        self.panel_detalles = QWidget()
+        self.panel_detalles.setObjectName("panel_contenedor")
+        self.panel_detalles.setVisible(False)
+        self.panel_detalles.setStyleSheet("""
+            QWidget#panel_contenedor { 
+                background-color: #f8f9fa; 
+                border-radius: 8px; 
+                border: 1px solid #dee2e6; 
+            }
+            QLabel { 
+                color: #1a1a18; 
+                border: none; 
+                font-size: 14px; 
+                padding-bottom: 5px; 
+            }
+            QTableWidget { 
+                background-color: white; 
+                border: none; 
+                color: #1a1a18;
+            }
+            QHeaderView::section {
+                background-color: #f1f3f4;
+                color: #5f5e5a;
+                font-weight: bold;
+                border: none;
+                border-bottom: 1px solid #dee2e6;
+                padding: 5px;
+            }
+            QTableWidget::item {
+                color: #1a1a18;
+                padding: 4px;
+            }
+            QTableWidget::item:selected {
+                background-color: #e3f2fd;
+                color: #0d47a1;
+            }
+        """)
+        layout_detalles = QVBoxLayout(self.panel_detalles)
+        
+        self.lbl_info_paciente = QLabel("<b>Detalles del Paciente:</b> ")
+        layout_detalles.addWidget(self.lbl_info_paciente)
+        
+        self.tabla_estudios = QTableWidget()
+        self.tabla_estudios.setColumnCount(4)
+        self.tabla_estudios.setHorizontalHeaderLabels(["Fecha / Hora", "Lateralidad", "Proyección", "Dosis (mGy)"])
+        self.tabla_estudios.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tabla_estudios.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.tabla_estudios.verticalHeader().setVisible(False)
+        self.tabla_estudios.setFixedHeight(150)
+        
+        layout_detalles.addWidget(self.tabla_estudios)
+        main_layout.addWidget(self.panel_detalles)
+
+        main_layout.addStretch()
 
     def populate_table(self, rows: list):
-        """
-        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
-        Vacía la tabla y la rellena con los datos proporcionados.
-        Se llama tanto en la carga inicial como tras aplicar filtros/búsqueda.
-
-        rows: list de dicts
-            Claves: id (str), age (int), density (str), agd (float), date (str),
-                    status ("ok" | "revisar")
-
-        Ejemplo (carga inicial):
-            view.populate_table(historial_controller.get_all())
-
-        Ejemplo (tras filtro):
-            view.populate_table(historial_controller.filter_by_density("B"))
-
-        Flujo de filtrado recomendado:
-            1. Usuario escribe en search_input → controller filtra → llama populate_table()
-            2. Usuario activa chip "Tipo C"    → controller filtra → llama populate_table()
-        """
         self.table.setRowCount(len(rows))
         for row_idx, r in enumerate(rows):
             status = r.get("status", "ok")
@@ -151,10 +148,32 @@ class ViewHistorial(QWidget):
             ]
             for col, item in enumerate(items):
                 item.setTextAlignment(Qt.AlignCenter)
-                # Colorear la columna Estado: azul=OK, amber=Revisar
                 if col == 5:
                     item.setForeground(
                         QColor(COLORS["blue"] if status == "ok" else COLORS["amber"])
                     )
                 self.table.setItem(row_idx, col, item)
             self.table.setRowHeight(row_idx, 36)
+
+    def mostrar_detalles_paciente(self, paciente):
+        self.panel_detalles.setVisible(True)
+        self.lbl_info_paciente.setText(f"<b>Estudios de {paciente.id}</b> | Edad: {paciente.edad} | Espesor: {paciente.espesor_mama_actual}mm")
+        
+        self.tabla_estudios.setRowCount(0)
+        
+        for estudio in paciente.estudios:
+            row = self.tabla_estudios.rowCount()
+            self.tabla_estudios.insertRow(row)
+            
+            fecha_hora = f"{estudio.fecha_realizacion} {estudio.hora_adquisicion}"
+            
+            items = [
+                QTableWidgetItem(fecha_hora),
+                QTableWidgetItem(str(estudio.lateralidad)),
+                QTableWidgetItem(str(estudio.proyeccion)),
+                QTableWidgetItem(f"{estudio.dosis_glandular:.2f}")
+            ]
+            
+            for col, item in enumerate(items):
+                item.setTextAlignment(Qt.AlignCenter)
+                self.tabla_estudios.setItem(row, col, item)
