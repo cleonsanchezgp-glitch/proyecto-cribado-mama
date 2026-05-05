@@ -1,10 +1,11 @@
 from typing import List
 
 from main.python.Models.Estudio import Estudio
-# Asegúrate de que la ruta de importación sea correcta según tu estructura de carpetas
-# from main.python.Models.Estudio import Estudio 
+
+
 
 class Paciente:
+    #tengo que agregar un id paciente 
     def __init__(self, id: str, edad: str, espesor_mama_actual: int):
         self.id = id # DNI (String)
         self.edad = edad # String según tu especificación

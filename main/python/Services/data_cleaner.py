@@ -2,16 +2,18 @@ import pandas as pd
 import os
 from main.python.Services import temporal_save_data
 
+from main.python.Services import temporal_save_data
+
 def calcular_dosis_pacientes(ruta_archivo_limpio):
     """
-    Realiza los cálculos de dosimetría utilizando los objetos almacenados en la 
-    memoria global (temporal_save_data).
+    Realiza los cálculos de dosimetría utilizando los objetos en memoria.
+    Mantiene el nombre original para compatibilidad.
     """
     print(f"--- Iniciando cálculo de dosis desde memoria global ---")
     
     try:
-        # 1. Extraemos los datos de los objetos Estudio en la memoria global
-        # Usamos los nombres de atributos de tu clase Estudio
+        # 1. Extraemos los datos directamente de los objetos Estudio en memoria
+        # Accedemos a los atributos de la clase: id_paciente, lateralidad y dosis_glandular
         datos_estudios = [
             {
                 'ID_Paciente': est.id_paciente,
@@ -22,16 +24,16 @@ def calcular_dosis_pacientes(ruta_archivo_limpio):
         ]
         
         if not datos_estudios:
-            print("Error: No hay datos cargados en la memoria global.")
+            print("Error: No hay datos cargados en memoria.")
             return False, None
 
-        # 2. Creamos el DataFrame para cálculos
+        # 2. Creamos el DataFrame para realizar los cálculos estadísticos
         df = pd.DataFrame(datos_estudios)
         
-        # 3. Agrupamos y sumamos
+        # 3. Agrupamos por Paciente y Lateralidad, sumando las dosis
         calculos = df.groupby(['ID_Paciente', 'Lateralidad'])['Dosis_Glandular'].sum().unstack(fill_value=0)
         
-        # Mapeo de columnas según los valores que guardes en el objeto (D/I o Derecha/Izquierda)
+        # Renombramos columnas para el informe (mapeando posibles valores D/I o Derecha/Izquierda)
         mapeo_columnas = {
             'D': 'Dosis_Mama_Derecha', 
             'I': 'Dosis_Mama_Izquierda',
@@ -40,20 +42,22 @@ def calcular_dosis_pacientes(ruta_archivo_limpio):
         }
         calculos = calculos.rename(columns=mapeo_columnas)
         
-        # Aseguramos existencia de columnas para la suma total
+        # Asegurar que ambas columnas existan para evitar errores matemáticos
         for col in ['Dosis_Mama_Derecha', 'Dosis_Mama_Izquierda']:
             if col not in calculos.columns:
                 calculos[col] = 0.0
         
-        # 4. Cálculo de magnitudes derivadas
+        # 4. Cálculo de magnitudes (Punto 3 del TFG)
         calculos['Dosis_Glandular_Total'] = calculos['Dosis_Mama_Derecha'] + calculos['Dosis_Mama_Izquierda']
         
         factor_tisular_mama = 0.12
         calculos['Dosis_Efectiva'] = calculos['Dosis_Glandular_Total'] * factor_tisular_mama
         
-        # 5. Exportación y retorno
+        # 5. Preparar resultados finales
         resultados_finales = calculos.reset_index()
         
+        # Aunque usamos memoria, mantenemos la lógica de guardado si se desea persistir el cálculo
+        # Usamos la ruta proporcionada para saber dónde dejar el reporte
         directorio = os.path.dirname(ruta_archivo_limpio)
         ruta_resultados = os.path.join(directorio, "resultados_dosimetria_pacientes.xlsx")
         

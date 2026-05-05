@@ -7,6 +7,9 @@ from PySide6.QtWidgets import (
 from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos, obtener_datos_historial
 from main.python.Mappers.data_mapper import procesar_archivo_a_objetos
 
+from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos, obtener_datos_historial
+from main.python.Mappers.data_mapper import procesar_archivo_a_objetos
+from main.python.Services.dosis_controller import dosis_controller
 from main.python.Services.config_modules import load_stylesheet
 from main.python.Views.colors import COLORS
 from main.python.Views.utils import Sidebar, Topbar
@@ -183,6 +186,9 @@ class MainWindow(QMainWindow):
 
         # 4. Actualización del Historial y Navegación
         self.views["historial"].populate_table(self.datos_tabla)
+
+        dosis_controller(view=self.views["dosis"], pacientes=self.pacientes_db)
+
         self._on_nav("resumen")
 
 

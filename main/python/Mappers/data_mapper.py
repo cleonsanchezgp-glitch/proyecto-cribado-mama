@@ -24,7 +24,8 @@ ALIASES = {
     'rejilla': ['Rejilla'],
     'tipo_act': ['Tipo de Actividad'],
     'prestacion': ['Presta Prestación Realizada'],
-    'temperatura': ['Temperatura Detector (ºC)']
+    'temperatura': ['Temperatura Detector (ºC)'],
+    'grupo_espesor': ['Grupo por Espesor']
 }
 
 def encontrar_cabecera(ruta_archivo):
@@ -128,7 +129,12 @@ def procesar_archivo_a_objetos(ruta_archivo):
                 distancia_foco_mama=buscar_valor(fila, ALIASES['dist_fm'], str),
                 factor_magnificacion=buscar_valor(fila, ALIASES['mag'], float),
                 rejilla=buscar_valor(fila, ALIASES['rejilla'], str),
+<<<<<<< HEAD
+                temperatura=buscar_valor(fila, ALIASES['temperatura'], float),
+                grupo_espesor=buscar_valor(fila, ALIASES['grupo_espesor'], str)  
+=======
                 temperatura=buscar_valor(fila, ALIASES['temperatura'], float)
+>>>>>>> 850e7e3eed3fe213482b6bc9699e880c108c6c92
             )
             
             # Añadimos el estudio a la "mochila" del paciente actual
