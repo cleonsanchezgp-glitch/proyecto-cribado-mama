@@ -1,30 +1,22 @@
 from PySide6.QtWidgets import (
-    QHBoxLayout, QWidget, QVBoxLayout, QPushButton
+    QHBoxLayout, QWidget, QVBoxLayout, QPushButton, QFileDialog, QMessageBox
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor
 from main.python.Views.colors import COLORS
-from main.python.Views.utils import Panel, label, separator
+from main.python.Views.utils import Panel, label, separator, badge
 
-from main.python.Views.utils import badge, label
-from main.python.Services.export_service import generate_csv_doc
+# Importamos ambos métodos del servicio de exportación
+from main.python.Services.export_service import generate_csv_doc, insert_data_DB
 
 class ViewExportar(QWidget):
     """
     Vista de exportación de resultados.
-
-    SEÑALES INTERNAS
-    ───────────────────────────────────────────────────────────────────────
-    export_csv_btn.clicked  — conecta al controller para exportar a CSV:
-        view.export_csv_btn.clicked.connect(ctrl.on_export_csv)
-
-    export_db_btn.clicked   — conecta al controller para insertar en BD:
-        view.export_db_btn.clicked.connect(ctrl.on_export_db)
     """
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.pacientes = []
+        self.pacientes = [] # Se mantiene por compatibilidad, aunque ahora usamos la memoria global
         self.setStyleSheet("background:transparent;")
         main = QVBoxLayout(self)
         main.setContentsMargins(20, 20, 20, 20)
@@ -115,6 +107,9 @@ class ViewExportar(QWidget):
             f"border-radius:8px; font-size:13px; font-weight:600; color:{COLORS['text_primary']}; }}"
             f"QPushButton:hover {{ background:{COLORS['bg_primary']}; }}"
         )
+        # Conectamos el botón de la base de datos
+        self.export_db_btn.clicked.connect(self.on_export_db)
+        
         db_layout.addWidget(self.export_db_btn)
         export_panel.body().addWidget(db_row)
 
@@ -122,7 +117,19 @@ class ViewExportar(QWidget):
         main.addStretch()
 
     def on_export_csv(self):
-        from PySide6.QtWidgets import QFileDialog
+        """Maneja la exportación del archivo CSV."""
         filename, _ = QFileDialog.getSaveFileName(self, "Guardar CSV", "", "CSV files (*.csv)")
         if filename:
-            generate_csv_doc(self.pacientes, filename)
+            try:
+                generate_csv_doc(filename) # Ya no necesita la lista como parámetro
+                QMessageBox.information(self, "Éxito", "Archivo CSV exportado correctamente.")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"No se pudo exportar el archivo: {str(e)}")
+
+    def on_export_db(self):
+        """Maneja la inserción en la base de datos."""
+        try:
+            insert_data_DB() # Llama directamente a la inserción en la BD
+            QMessageBox.information(self, "Éxito", "Datos insertados en la base de datos correctamente.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error al insertar en la base de datos:\n{str(e)}")

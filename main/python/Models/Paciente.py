@@ -1,7 +1,13 @@
 from typing import List
 from main.python.Models.Estudio import Estudio
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 38a5c62f3f48ac9d2e928150a71c3b2553277c8a
 
 class Paciente:
+    #tengo que agregar un id paciente 
     def __init__(self, id: str, edad: str, espesor_mama_actual: int):
         self.id = id 
         self.edad = edad 
