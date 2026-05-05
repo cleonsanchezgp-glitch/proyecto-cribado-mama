@@ -129,7 +129,8 @@ def procesar_archivo_a_objetos(ruta_archivo):
                 distancia_foco_mama=buscar_valor(fila, ALIASES['dist_fm'], str),
                 factor_magnificacion=buscar_valor(fila, ALIASES['mag'], float),
                 rejilla=buscar_valor(fila, ALIASES['rejilla'], str),
-                temperatura=buscar_valor(fila, ALIASES['temperatura'], float)
+                temperatura=buscar_valor(fila, ALIASES['temperatura'], float),
+                grupo_espesor=buscar_valor(fila, ALIASES['grupo_espesor'], str)
             )
             
             # Añadimos el estudio a la "mochila" del paciente actual
