@@ -12,17 +12,16 @@ def deducir_densidad(espesor):
     else: return 'D'
 
 def obtener_metricas_dashboard(pacientes):
-    """Calcula los KPIs principales recorriendo la lista de objetos Paciente."""
     if not pacientes: return []
-    
-    # 💡 AQUÍ USAMOS EL NUEVO MÉTODO DEL OBJETO
+
     dosis_totales = [p.calcular_dosis_glandular_total() for p in pacientes]
-    registros_cruzados = sum(len(p.estudios) for p in pacientes)
+    # Calculo el total de estudios sumando la longitud de la lista de estudios de cada paciente
+    total_estudios = sum(len(p.estudios) for p in pacientes)
     dosis_media = np.mean(dosis_totales) if dosis_totales else 0
     desviacion_std = np.std(dosis_totales) if len(dosis_totales) > 1 else 0.0
 
     return [
-        {"value": str(len(pacientes)), "subtitle": "Pacientes únicos", "badge_text": "Objetos RAM", "badge_style": "blue"},
+        {"value": str(len(pacientes)), "subtitle": "Pacientes únicos", "badge_text": "Agrupados", "badge_style": "blue"},
         {"value": f"{dosis_media:.2f}".replace('.', ','), "subtitle": "Dosis Glandular Media", "badge_text": "mGy", "badge_style": "green"},
         {"value": str(total_estudios), "subtitle": "Exploraciones", "badge_text": "Procesadas", "badge_style": "blue"},
         {"value": f"{desviacion_std:.2f}".replace('.', ','), "subtitle": "Dispersión", "badge_text": "± mGy", "badge_style": "amber"}
