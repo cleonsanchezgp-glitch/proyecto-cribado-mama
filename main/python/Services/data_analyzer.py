@@ -4,13 +4,6 @@ from datetime import datetime
 # aunque en tu MainWindow los pasas como argumento.
 from main.python.Services import temporal_save_data
 
-<<<<<<< HEAD
-=======
-def calcular_dosis_total_paciente(paciente):
-    """Suma la dosis glandular de todos los estudios asociados a un objeto Paciente."""
-    return sum(estudio.dosis_glandular for estudio in paciente.estudios)
-
->>>>>>> 38a5c62f3f48ac9d2e928150a71c3b2553277c8a
 def deducir_densidad(espesor):
     """Lógica de clasificación basada en el espesor (mm)."""
     if espesor < 45: return 'A'
@@ -22,17 +15,9 @@ def obtener_metricas_dashboard(pacientes):
     """Calcula los KPIs principales recorriendo la lista de objetos Paciente."""
     if not pacientes: return []
     
-<<<<<<< HEAD
     # 💡 AQUÍ USAMOS EL NUEVO MÉTODO DEL OBJETO
     dosis_totales = [p.calcular_dosis_glandular_total() for p in pacientes]
     registros_cruzados = sum(len(p.estudios) for p in pacientes)
-=======
-    # Calculamos dosis totales por paciente usando el método anterior
-    dosis_totales = [calcular_dosis_total_paciente(p) for p in pacientes]
-    # Contamos el total de estudios (exploraciones) navegando por la relación 1:N
-    total_estudios = sum(len(p.estudios) for p in pacientes)
-    
->>>>>>> 38a5c62f3f48ac9d2e928150a71c3b2553277c8a
     dosis_media = np.mean(dosis_totales) if dosis_totales else 0
     desviacion_std = np.std(dosis_totales) if len(dosis_totales) > 1 else 0.0
 
@@ -87,7 +72,6 @@ def obtener_datos_historial(pacientes):
     filas_historial = []
     
     for p in pacientes:
-<<<<<<< HEAD
         # 💡 AQUÍ USAMOS EL NUEVO MÉTODO DEL OBJETO
         dosis_total = p.calcular_dosis_glandular_total()
         
@@ -96,20 +80,6 @@ def obtener_datos_historial(pacientes):
         estado = "revisar" if dosis_total > limite_seguridad else "ok"
         
         fecha_str = p.estudios[0].fecha_realizacion if p.estudios else "Desconocida"
-=======
-        dosis_total = calcular_dosis_total_paciente(p)
-        
-        # Lógica de alerta: marcar si supera un umbral (ej: 2.5 mGy por mama total)
-        estado = "revisar" if dosis_total > 2.5 else "ok"
-        
-        # Accedemos a la fecha del primer estudio del paciente
-        if p.estudios:
-            fecha_dt = p.estudios[0].fecha_realizacion
-            # Si es un objeto datetime, lo formateamos, si no, lo pasamos como string
-            fecha_str = fecha_dt.strftime('%d/%m/%Y') if isinstance(fecha_dt, datetime) else str(fecha_dt)
-        else:
-            fecha_str = "S/D"
->>>>>>> 38a5c62f3f48ac9d2e928150a71c3b2553277c8a
         
         filas_historial.append({
             "id": p.id,
