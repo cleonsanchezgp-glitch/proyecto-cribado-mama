@@ -152,6 +152,11 @@ class MainWindow(QMainWindow):
         # 1. Convertimos el archivo a Objetos en Memoria
         self.pacientes_db = procesar_archivo_a_objetos(ruta_archivo)
         
+        # ── AQUÍ ESTÁ EL CAMBIO: Guardamos los datos en la memoria global ──
+        if self.pacientes_db:
+            from main.python.Services import temporal_save_data
+            temporal_save_data.pacientes_memoria = self.pacientes_db
+        
         if not self.pacientes_db:
             from PySide6.QtWidgets import QMessageBox
             QMessageBox.critical(self, "Error", "No se pudo procesar el archivo o está vacío.")
