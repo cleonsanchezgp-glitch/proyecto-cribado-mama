@@ -9,7 +9,7 @@ class Estudio:
                   lateralidad: str, proyeccion: str, fuerza_compresion: str, 
                  tension_tubo: int, espesor_mama_estudio: int, corriente_tubo: int, carga: float, tiempo_exposicion: float,
                    filtro: str, kerma_entrada: float, dosis_glandular: float, distancia_foco_paciente: float,
-                 distancia_foco_mama: str, factor_magnificacion: float, rejilla: str, temperatura: float):
+                 distancia_foco_mama: str, factor_magnificacion: float, rejilla: str, temperatura: float, grupo_espesor: str):
         
         self.id_paciente = id_paciente # FK
         self.tipo_actividad = tipo_actividad

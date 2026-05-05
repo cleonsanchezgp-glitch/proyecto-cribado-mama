@@ -3,7 +3,6 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QScrollArea, QStackedWidget
 )
-from PySide6.QtWidgets import QMessageBox
 from main.python.Services.data_analyzer import obtener_metricas_dashboard, obtener_datos_graficos, obtener_datos_historial
 from main.python.Mappers.data_mapper import procesar_archivo_a_objetos
 from main.python.Services.dosis_controller import dosis_controller
