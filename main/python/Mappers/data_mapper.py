@@ -109,7 +109,7 @@ def procesar_archivo_a_objetos(ruta_archivo):
             
             # Independientemente de si es nuevo o el mismo, creamos su Estudio (la fila actual)
             estudio = Estudio(
-                id_paciente=paciente_actual.id,  # Le asignamos el ID autogenerado
+                id_paciente=paciente_actual.id,
                 tipo_actividad=buscar_valor(fila, ALIASES['tipo_act'], str),
                 prestacion_realizada=buscar_valor(fila, ALIASES['prestacion'], str),
                 hora_adquisicion=buscar_valor(fila, ALIASES['hora'], str), 
@@ -129,9 +129,7 @@ def procesar_archivo_a_objetos(ruta_archivo):
                 distancia_foco_mama=buscar_valor(fila, ALIASES['dist_fm'], str),
                 factor_magnificacion=buscar_valor(fila, ALIASES['mag'], float),
                 rejilla=buscar_valor(fila, ALIASES['rejilla'], str),
-                temperatura=buscar_valor(fila, ALIASES['temperatura'], float),
-                grupo_espesor=buscar_valor(fila, ALIASES['grupo_espesor'], str)  
-
+                temperatura=buscar_valor(fila, ALIASES['temperatura'], float)
             )
             
             # Añadimos el estudio a la "mochila" del paciente actual
