@@ -18,6 +18,24 @@ class Paciente:
         """Suma la dosis de absolutamente todas las fotos (estudios) de este paciente."""
         return sum(estudio.dosis_glandular for estudio in self.estudios)
 
+    def dosis_mama_izquierda(self) -> float:
+        """Suma la dosis glandular (AGD) de todos los disparos hechos en la mama izquierda."""
+        # Buscamos 'I' (Izquierda) o 'L' (Left) por si el Excel viene en inglés
+        return sum(
+            estudio.dosis_glandular 
+            for estudio in self.estudios 
+            if str(estudio.lateralidad).strip().upper() in ['I', 'L']
+        )
+
+    def dosis_mama_derecha(self) -> float:
+        """Suma la dosis glandular (AGD) de todos los disparos hechos en la mama derecha."""
+        # Buscamos 'D' (Derecha) o 'R' (Right)
+        return sum(
+            estudio.dosis_glandular 
+            for estudio in self.estudios 
+            if str(estudio.lateralidad).strip().upper() in ['D', 'R']
+        )
+
     def calcular_dosis_efectiva(self) -> float:
         """Dosis Total * Factor de ponderación de la mama (0.12) = Riesgo real"""
         dosis_total = self.calcular_dosis_glandular_total()
