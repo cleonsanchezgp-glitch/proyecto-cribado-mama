@@ -239,7 +239,21 @@ class ViewResumen(QWidget):
         Rellena el gráfico de barras AGD por grupo de densidad.
         Delega en BarChart.set_data(data) — ver su docstring para el formato.
         """
-        self._bar_chart.set_data(data)
+
+        colores = [
+        ("#C8E6A0", "#97C459"),   # Tipo A — verde
+        ("#B5D4F4", "#378ADD"),   # Tipo B — azul
+        ("#F9D89A", "#EF9F27"),   # Tipo C — naranja
+        ("#F4B8A0", "#D85A30"),   # Tipo D — rojo
+    ]
+        tuplas = []
+        for i, d in enumerate(data):
+            label_txt = d.get("label", f"Tipo {i}")
+            v1 = d.get("value1", 0.0) * 50   # Límite EUREF escalado
+            v2 = d.get("value2", 0.0) * 50   # Dosis media escalada
+            c1, c2 = colores[i % len(colores)]
+            tuplas.append((label_txt, v1, v2, c1, c2))
+            self._bar_chart.set_data(tuplas)
 
     def populate_density(self, data: list):
         """
