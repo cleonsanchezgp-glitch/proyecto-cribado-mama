@@ -6,6 +6,11 @@ from PySide6.QtGui import (
     QColor, QPainter, QPen, QBrush, QCursor
 )
 
+import numpy as np
+
+from PySide6.QtCore import QRect
+
+
 from main.python.Views.colors import COLORS
 
 
@@ -117,6 +122,7 @@ class ProgressBar(QWidget):
         if color:
             self._color = color
         self.update()   # Fuerza repintado
+
 
     def paintEvent(self, event):
         # Dibuja el fondo gris y el relleno coloreado proporcionalmente
@@ -276,6 +282,16 @@ class ScatterPlot(QWidget):
         chart_w = w - ml - mr
         chart_h = h - mb - mt
 
+        if self._points:
+            espesores = [t for t, _, _ in self._points]
+            x_min = max(0, np.percentile(espesores, 2))
+            x_max = np.percentile(espesores, 98)
+        else:
+            x_min, x_max = 20, 90 
+ 
+        rango_x = x_max - x_min
+        punto_medio = x_min + rango_x / 2
+
         # ── Ejes X e Y ────────────────────────────────────────────────────
         p.setPen(QPen(QColor(0, 0, 0, 50), 1))
         p.drawLine(ml, mt, ml, h - mb)       # Eje Y (vertical)
@@ -297,14 +313,18 @@ class ScatterPlot(QWidget):
         font2 = p.font()
         font2.setPointSize(7)
         p.setFont(font2)
-        for val, txt in [(0, "30mm"), (0.5, "60mm"), (1.0, "90mm")]:
+        for val, txt in [(0, f"{int(x_min)}mm"), (0.5, f"{int(punto_medio)}mm"), (1.0, f"{int(x_max)}mm")]: 
             x = ml + int(chart_w * val)
             p.drawText(x - 15, h - mb + 6, 30, 12, Qt.AlignCenter, txt)
 
+
+        clip_rect = QRect(ml, mt, chart_w, chart_h)  # ✅ recorta al área del gráfico
+        p.setClipRect(clip_rect)
+
         # ── Puntos del scatter (un punto por paciente) ────────────────────
         for thickness, agd, d in self._points:
-            # Mapear espesor (30–90mm) al ancho del gráfico
-            xp = ml + int(chart_w * (thickness - 30) / 60)
+            # Mapear espesor (25–90mm) al ancho del gráfico
+            xp = ml + int(chart_w * (thickness - x_min) / rango_x)
             # Mapear AGD (0–4,5 mGy) a la altura del gráfico (invertido: 0 abajo)
             yp = mt + int(chart_h * (1 - agd / 4.5))
             color = QColor(self.DENSITY_COLORS[d % len(self.DENSITY_COLORS)])
@@ -312,6 +332,7 @@ class ScatterPlot(QWidget):
             p.setPen(Qt.NoPen)
             p.setBrush(QBrush(color))
             p.drawEllipse(xp - 3, yp - 3, 7, 7)
+        p.setClipping(False)
         p.end()
 
 
