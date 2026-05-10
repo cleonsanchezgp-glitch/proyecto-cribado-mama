@@ -39,7 +39,6 @@ class Estudio:
         self.rejilla = rejilla
         self.temperatura = float(temperatura)
         self.grupo_espesor = grupo_espesor
-<<<<<<< HEAD
 
         # --- ATRIBUTOS DISCRIMINADOS POR MAMA ---
         # Se calculan automáticamente al instanciar el objeto
@@ -74,8 +73,6 @@ class Estudio:
     def calcular_dosis_efectiva(self) -> float:
         return self.dosis_glandular * 0.12
 
-=======
->>>>>>> origin/develop
     def __repr__(self):
         return (
             f"Estudio(ID={self.id_paciente}, Lat={self.lateralidad}, "

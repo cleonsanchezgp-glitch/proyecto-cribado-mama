@@ -88,7 +88,7 @@ class ViewResumen(QWidget):
         leg_l = QHBoxLayout(leg)
         leg_l.setContentsMargins(0, 4, 0, 0)
         leg_l.setSpacing(14)
-        for color, txt in [("#B5D4F4", "Límite Ref."), ("#378ADD", "Dosis Media")]:
+        for color, txt in []:
             dot = QLabel("■")
             dot.setStyleSheet(f"color:{color}; font-size:11px; background:transparent; border:none;")
             t = label(txt, 11, COLORS["text_secondary"])
@@ -235,25 +235,34 @@ class ViewResumen(QWidget):
 
     def populate_chart(self, data: list):
         """
-        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
         Rellena el gráfico de barras AGD por grupo de densidad.
-        Delega en BarChart.set_data(data) — ver su docstring para el formato.
         """
-
         colores = [
-        ("#C8E6A0", "#97C459"),   # Tipo A — verde
-        ("#B5D4F4", "#378ADD"),   # Tipo B — azul
-        ("#F9D89A", "#EF9F27"),   # Tipo C — naranja
-        ("#F4B8A0", "#D85A30"),   # Tipo D — rojo
-    ]
+            ("#C8E6A0", "#97C459"),   # Tipo A
+            ("#B5D4F4", "#378ADD"),   # Tipo B
+            ("#F9D89A", "#EF9F27"),   # Tipo C
+            ("#F4B8A0", "#D85A30"),   # Tipo D
+        ]
+        
+        # --- AJUSTE DE MARGEN Y ESCALA ---
+        # Si antes era 50 y quieres que quepan valores de hasta 10, 
+        # bajamos el factor a 20 o 25 para que 10 mGy * 20 = 200px de altura.
+        factor_escala = 20 
+        
         tuplas = []
         for i, d in enumerate(data):
             label_txt = d.get("label", f"Tipo {i}")
-            v1 = d.get("value1", 0.0) * 50   # Límite EUREF escalado
-            v2 = d.get("value2", 0.0) * 50   # Dosis media escalada
+            
+            # ENVIAMOS EL VALOR REAL (Sin el * 50)
+            # Si tus datos ya vienen en mGy (ej: 1.5, 2.3), pásalos así:
+            v1 = d.get("value1", 0.0)  
+            v2 = d.get("value2", 0.0) 
+            
             c1, c2 = colores[i % len(colores)]
+            
             tuplas.append((label_txt, v1, v2, c1, c2))
-            self._bar_chart.set_data(tuplas)
+                
+        self._bar_chart.set_data(tuplas)
 
     def populate_density(self, data: list):
         """

@@ -167,7 +167,7 @@ class BarChart(QWidget):
     def set_data(self, data: list):
         """
         ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
-        Inyecta los datos del gráfico de barras.
+        Inyecta los datos del gráfico de barras.f
 
         Formato esperado:
             [("Tipo A", val_año_anterior, val_año_actual, color_claro, color_oscuro), ...]
@@ -180,7 +180,7 @@ class BarChart(QWidget):
 
     def paintEvent(self, event):
         if not self._data:
-            return   # Sin datos → no dibuja nada
+            return  # Si no hay datos, no dibujamos nada para evitar errores
 
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
@@ -189,48 +189,57 @@ class BarChart(QWidget):
 
         chart_h = h - margin_b - margin_t
         chart_w = w - margin_l - 12
+        
+        # --- CONFIGURACIÓN DE ESCALA ---
+        # Ahora la escala máxima es 10.0 mGy
+        max_scale = 10.0 
 
-        # ── Líneas de cuadrícula horizontal (eje Y) ───────────────────────
-        for y_val in [0, 1.0, 2.0, 3.0]:
-            y = h - margin_b - int(chart_h * y_val / 3.5)
+        # ── Eje Y y Cuadrícula ──────────────────────────────────────────
+        for y_val in [0.0, 2.0, 4.0, 6.0, 8.0, 10.0]:
+            # Calculamos la posición Y proporcional a los 10.0 de escala
+            y = h - margin_b - int(chart_h * y_val / max_scale)
+            
+            # Línea de puntos de fondo
             p.setPen(QPen(QColor(0, 0, 0, 25), 1, Qt.DashLine))
             p.drawLine(margin_l, y, w - 12, y)
-            # Etiqueta numérica del eje Y
+            
+            # Etiquetas numéricas (0.0, 2.0, etc.)
             p.setPen(QColor("#9a9890"))
             font = p.font()
             font.setPointSize(7)
             p.setFont(font)
             p.drawText(0, y + 4, 34, 14, Qt.AlignRight, f"{y_val:.1f}")
 
-        # ── Barras agrupadas por tipo de densidad ─────────────────────────
-        group_w = chart_w / len(self._data)
-        bar_w = group_w * 0.22
-        gap = bar_w * 0.3
+        # ── Dibujo de Barras ─────────────────────────────────────────────
+        # Ajuste: Limitamos el ancho del grupo para que no se vea gigante con un solo dato
+        num_grupos = len(self._data)
+        group_w = min(chart_w / num_grupos, 120) 
+        bar_w = group_w * 0.35
+        gap = bar_w * 0.2
 
         for idx, (label_txt, h1, h2, c1, c2) in enumerate(self._data):
-            gx = margin_l + idx * group_w + group_w * 0.15
-            max_h = 180   # Altura máxima de referencia para escalar las barras
+            # Calculamos la X inicial del grupo
+            gx = margin_l + idx * (chart_w / num_grupos) + (chart_w / num_grupos - group_w) / 2
+            
+            # Calculamos alturas: (h / max_scale) nos da el porcentaje de llenado
+            # IMPORTANTE: Asegúrate de que en la View ya NO multipliques por 50
+            bh1 = int(chart_h * (float(h1) / max_scale))
+            bh2 = int(chart_h * (float(h2) / max_scale))
 
-            # Barra año anterior (color claro)
-            bh1 = int(chart_h * h1 / max_h)
-            x1 = int(gx)
+            # Dibujar Barra 1 (Año Anterior - Color claro)
             p.setPen(Qt.NoPen)
             p.setBrush(QBrush(QColor(c1)))
-            p.drawRoundedRect(x1, h - margin_b - bh1, int(bar_w), bh1, 2, 2)
+            p.drawRoundedRect(int(gx), h - margin_b - bh1, int(bar_w), bh1, 2, 2)
 
-            # Barra año actual (color oscuro)
-            bh2 = int(chart_h * h2 / max_h)
-            x2 = int(gx + bar_w + gap)
+            # Dibujar Barra 2 (Año Actual - Color oscuro)
             p.setBrush(QBrush(QColor(c2)))
-            p.drawRoundedRect(x2, h - margin_b - bh2, int(bar_w), bh2, 2, 2)
+            p.drawRoundedRect(int(gx + bar_w + gap), h - margin_b - bh2, int(bar_w), bh2, 2, 2)
 
-            # Etiqueta del grupo en el eje X (p. ej. "Tipo A")
+            # Etiqueta del Eje X (Ej: "Tipo A")
             p.setPen(QColor("#9a9890"))
-            font2 = p.font()
-            font2.setPointSize(7)
-            p.setFont(font2)
             center_x = int(gx + bar_w + gap / 2)
-            p.drawText(center_x - 22, h - margin_b + 6, 44, 14, Qt.AlignCenter, label_txt)
+            p.drawText(center_x - 30, h - margin_b + 6, 60, 14, Qt.AlignCenter, label_txt)
+            
         p.end()
 
 
