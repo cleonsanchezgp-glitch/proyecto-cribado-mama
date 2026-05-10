@@ -373,9 +373,6 @@ class Sidebar(QWidget):
             ("cargar",   "Cargar archivos",    "⊞"),
             ("exportar", "Exportar resultados","↓"),
         ]),
-        ("Sistema", [
-            ("config",   "Configuración",      "⚙"),
-        ]),
     ]
 
     def __init__(self, on_nav, parent=None):

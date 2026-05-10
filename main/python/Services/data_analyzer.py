@@ -12,10 +12,12 @@ def deducir_densidad(espesor):
     else: return 'D'
 
 def obtener_metricas_dashboard(pacientes):
+    """Calcula las métricas principales para los cuadros superiores del dashboard."""
     if not pacientes: return []
 
-    dosis_totales = [p.calcular_dosis_glandular_total() for p in pacientes]
-    # Calculo el total de estudios sumando la longitud de la lista de estudios de cada paciente
+    # Calculamos las dosis totales usando la función local
+    dosis_totales = [calcular_dosis_total_paciente(p) for p in pacientes]
+    
     total_estudios = sum(len(p.estudios) for p in pacientes)
     dosis_media = np.mean(dosis_totales) if dosis_totales else 0
     desviacion_std = np.std(dosis_totales) if len(dosis_totales) > 1 else 0.0
@@ -67,18 +69,21 @@ def obtener_datos_graficos(pacientes):
     return datos_densidad, datos_grafico
 
 def obtener_datos_historial(pacientes):
-    """Transforma la lista de objetos en una lista de diccionarios plana para la QTable."""
+    """Transforma la lista de objetos en una lista plana para la tabla de la UI."""
     filas_historial = []
     
     for p in pacientes:
-        # 💡 AQUÍ USAMOS EL NUEVO MÉTODO DEL OBJETO
-        dosis_total = p.calcular_dosis_glandular_total()
+        dosis_total = calcular_dosis_total_paciente(p)
         
-        # El límite de seguridad cambia según si el grosor es > 50mm o < 50mm
+        # Lógica de estado según espesor
         limite_seguridad = 3.0 if p.espesor_mama_actual > 50 else 2.0
         estado = "revisar" if dosis_total > limite_seguridad else "ok"
         
-        fecha_str = p.estudios[0].fecha_realizacion if p.estudios else "Desconocida"
+        # Obtenemos la fecha del primer estudio disponible
+        fecha_str = "Desconocida"
+        if p.estudios:
+            f = p.estudios[0].fecha_realizacion
+            fecha_str = f.isoformat() if hasattr(f, 'isoformat') else str(f)
         
         filas_historial.append({
             "id": p.id,
@@ -93,50 +98,61 @@ def obtener_datos_historial(pacientes):
 
 
 def deducir_densidad(espesor):
-    if espesor < 45: return 'A'
-    elif espesor < 55: return 'B'
-    elif espesor < 65: return 'C'
+    """Lógica de clasificación basada en el espesor (mm)."""
+    try:
+        esp = float(espesor)
+    except (ValueError, TypeError):
+        return 'D'
+    
+    if esp < 45: return 'A'
+    elif esp < 55: return 'B'
+    elif esp < 65: return 'C'
     else: return 'D'
-
 def calcular_dosis_total_paciente(paciente):
-    """Suma la dosis de todos los estudios del objeto paciente"""
+    """
+    Suma la dosis de todos los estudios del objeto paciente.
+    Sustituye la llamada al método inexistente en la clase Paciente.
+    """
+    if not hasattr(paciente, 'estudios') or not paciente.estudios:
+        return 0.0
     return sum(estudio.dosis_glandular for estudio in paciente.estudios)
 
 def obtener_datos_graficos(pacientes):
+    """Agrupa dosis por densidad mamaria para los gráficos del dashboard."""
     if not pacientes: return [], []
     
-    # Referencias EUREF (puedes ajustarlas según tu TFG)
+    # Referencias EUREF aproximadas
     referencias = {'A': 1.5, 'B': 2.0, 'C': 2.5, 'D': 3.0}
-    
     datos_por_densidad = {'A': [], 'B': [], 'C': [], 'D': []}
+    
     for p in pacientes:
         tipo = deducir_densidad(p.espesor_mama_actual)
         dosis = calcular_dosis_total_paciente(p)
         datos_por_densidad[tipo].append(dosis)
         
+    total_pacientes = len(pacientes)
     datos_densidad = []
     datos_grafico = []
     
     for letra in ['A', 'B', 'C', 'D']:
         lista_dosis = datos_por_densidad[letra]
         n = len(lista_dosis)
-        prop = n / len(pacientes) if len(pacientes) > 0 else 0
+        prop = n / total_pacientes if total_pacientes > 0 else 0
         
-        # 1. Datos para las barras de progreso (ViewResumen)
+        # 1. Datos para barras de progreso
         datos_densidad.append({
             "proportion": float(prop), 
             "pct_text": f"{int(prop * 100)}%", 
             "n": str(n)
         })
         
-        # 2. Datos para el BarChart ( value1=EUREF, value2=Real )
+        # 2. Datos para el gráfico comparativo (EUREF vs Real)
         dosis_media = np.mean(lista_dosis) if n > 0 else 0.0
         datos_grafico.append({
             "label": f"Tipo {letra}", 
-            "value1": referencias[letra],
-            "value2": float(dosis_media)
+            "value1": referencias[letra], # Valor de referencia
+            "value2": float(dosis_media)   # Valor real calculado
         })
         
     return datos_densidad, datos_grafico
-
 # Aquí irían también obtener_metricas_dashboard y obtener_datos_historial...

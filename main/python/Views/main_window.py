@@ -10,7 +10,7 @@ from main.python.Services.config_modules import load_stylesheet
 from main.python.Views.colors import COLORS
 from main.python.Views.utils import Sidebar, Topbar
 from main.python.Views.view_cargar import ViewCargar
-from main.python.Views.view_config import ViewConfig
+
 from main.python.Views.view_dosis import ViewDosis
 from main.python.Views.view_exportar import ViewExportar
 from main.python.Views.view_hisotrial import ViewHistorial
@@ -46,7 +46,6 @@ class MainWindow(QMainWindow):
         "historial": "Historial de exploraciones",
         "cargar":    "Cargar archivos",
         "exportar":  "Exportar datos",
-        "config":    "Configuración",
     }
 
     def __init__(self):
@@ -104,7 +103,6 @@ class MainWindow(QMainWindow):
             "historial": ViewHistorial(),  # Vista de tabla de pacientes
             "cargar":    ViewCargar(),     # Vista de carga de archivos
             "exportar":  ViewExportar(),    # Vista de exportación de datos
-            "config":    ViewConfig(),     # Vista de configuración y parámetros
         }
         for view in self.views.values():
             self.stack.addWidget(view)
@@ -271,8 +269,7 @@ class MainWindow(QMainWindow):
     #         self.resumen_ctrl   = ResumenController(db_session)
     #         self.dosis_ctrl     = DosisController(db_session)
     #         self.historial_ctrl = HistorialController(db_session)
-    #         self.config_ctrl    = ConfigController(config_path)
-    #
+
     #         # Conectar botones de la Topbar
     #         self.topbar.export_btn.clicked.connect(self.resumen_ctrl.on_export)
     #         self.topbar.new_analysis_btn.clicked.connect(self.resumen_ctrl.on_new_analysis)

@@ -16,7 +16,6 @@ class ViewExportar(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.pacientes = [] # Se mantiene por compatibilidad, aunque ahora usamos la memoria global
         self.setStyleSheet("background:transparent;")
         main = QVBoxLayout(self)
         main.setContentsMargins(20, 20, 20, 20)
@@ -87,27 +86,26 @@ class ViewExportar(QWidget):
         db_hl = QHBoxLayout(db_header)
         db_hl.setContentsMargins(0, 0, 0, 0)
         db_hl.setSpacing(10)
-        db_hl.addWidget(label("🗄️ Insertar en base de datos", 13, COLORS["text_primary"], "bold"), 1)
-        db_hl.addWidget(badge("BD", "gray"))
+        db_hl.addWidget(label("🗄️ Oracle Database", 13, COLORS["text_primary"], "bold"), 1)
+        db_hl.addWidget(badge("23ai Free", "amber")) # Badge actualizado al sistema
         db_layout.addWidget(db_header)
 
         db_layout.addWidget(
             label(
-                "Vuelca los datos procesados directamente en la base de datos "
-                "configurada, creando o actualizando los registros correspondientes.",
+                "Conexión directa con FREEPDB1. Almacena de forma permanente "
+                "los estudios calculados y actualiza el historial clínico.",
                 11, COLORS["text_tertiary"], wrap=True
             )
         )
 
-        self.export_db_btn = QPushButton("Insertar en base de datos")
-        self.export_db_btn.setFixedHeight(36)
+        self.export_db_btn = QPushButton("Sincronizar con Base de Datos")
+        self.export_db_btn.setFixedHeight(40) # Un poco más alto para destacar
         self.export_db_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.export_db_btn.setStyleSheet(
-            "QPushButton { background:transparent; border:0.5px solid rgba(0,0,0,0.25); "
-            f"border-radius:8px; font-size:13px; font-weight:600; color:{COLORS['text_primary']}; }}"
-            f"QPushButton:hover {{ background:{COLORS['bg_primary']}; }}"
+            f"QPushButton {{ background:{COLORS['bg_primary']}; border:1px solid {COLORS['blue']}; "
+            f"border-radius:8px; font-size:13px; font-weight:600; color:{COLORS['blue']}; }}"
+            f"QPushButton:hover {{ background:{COLORS['blue']}; color: white; }}"
         )
-        # Conectamos el botón de la base de datos
         self.export_db_btn.clicked.connect(self.on_export_db)
         
         db_layout.addWidget(self.export_db_btn)
@@ -121,15 +119,42 @@ class ViewExportar(QWidget):
         filename, _ = QFileDialog.getSaveFileName(self, "Guardar CSV", "", "CSV files (*.csv)")
         if filename:
             try:
-                generate_csv_doc(filename) # Ya no necesita la lista como parámetro
-                QMessageBox.information(self, "Éxito", "Archivo CSV exportado correctamente.")
+                generate_csv_doc(filename)
+                QMessageBox.information(self, "Exportación Exitosa", f"Archivo guardado en:\n{filename}")
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"No se pudo exportar el archivo: {str(e)}")
+                QMessageBox.critical(self, "Error de Archivo", f"No se pudo generar el CSV:\n{str(e)}")
 
     def on_export_db(self):
-        """Maneja la inserción en la base de datos."""
-        try:
-            insert_data_DB() # Llama directamente a la inserción en la BD
-            QMessageBox.information(self, "Éxito", "Datos insertados en la base de datos correctamente.")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error al insertar en la base de datos:\n{str(e)}")
+        """Maneja la inserción en la base de datos Oracle."""
+        # 1. Confirmación del usuario
+        reply = QMessageBox.question(
+            self, "Confirmar Sincronización",
+            "¿Deseas volcar los datos actuales en la base de datos Oracle?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            # 2. Feedback visual (Opcional: cambiar cursor a espera)
+            self.setCursor(Qt.WaitCursor)
+            self.export_db_btn.setEnabled(False)
+            self.export_db_btn.setText("Conectando con Oracle...")
+
+            try:
+                # 3. Llamada al servicio que creamos
+                insert_data_DB()
+                
+                QMessageBox.information(
+                    self, "Sincronización Exitosa", 
+                    "Los datos se han guardado correctamente en FREEPDB1."
+                )
+            except Exception as e:
+                # Error detallado para depuración
+                QMessageBox.critical(
+                    self, "Error de Conexión", 
+                    f"No se pudo conectar con Oracle:\n{str(e)}"
+                )
+            finally:
+                # 4. Restaurar estado de la UI
+                self.setCursor(Qt.ArrowCursor)
+                self.export_db_btn.setEnabled(True)
+                self.export_db_btn.setText("Sincronizar con Base de Datos")

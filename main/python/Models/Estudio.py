@@ -1,23 +1,27 @@
-from datetime import  time
-
+from datetime import time
 
 class Estudio:
-
-    # SELF es lo mismo que el this en java
-    #En python no se declaran las variables antes del constructor, se declaran y se crean dentro del mismo constructor
-    def __init__(self, id_paciente: str, tipo_actividad: str, prestacion_realizada: str, hora_adquisicion: time, fecha_realizacion: time,
-                  lateralidad: str, proyeccion: str, fuerza_compresion: str, 
-                 tension_tubo: int, espesor_mama_estudio: int, corriente_tubo: int, carga: float, tiempo_exposicion: float,
-                   filtro: str, kerma_entrada: float, dosis_glandular: float, distancia_foco_paciente: float,
-                 distancia_foco_mama: str, factor_magnificacion: float, rejilla: str, temperatura: float):
+    def __init__(self, id_paciente: str, tipo_actividad: str, prestacion_realizada: str, 
+                 hora_adquisicion: time, fecha_realizacion: time, lateralidad: str, 
+                 proyeccion: str, fuerza_compresion: str, tension_tubo: int, 
+                 espesor_mama_estudio: int, corriente_tubo: int, carga: float, 
+                 tiempo_exposicion: float, filtro: str, kerma_entrada: float, 
+                 dosis_glandular: float, distancia_foco_paciente: float, 
+                 distancia_foco_mama: str, factor_magnificacion: float, 
+                 rejilla: str, temperatura: float, grupo_espesor: str = ""):
         
-        self.id_paciente = id_paciente # FK
+        # Identificadores
+        self.id_paciente = id_paciente 
         self.tipo_actividad = tipo_actividad
         self.prestacion_realizada = prestacion_realizada
         self.hora_adquisicion = hora_adquisicion
         self.fecha_realizacion = fecha_realizacion
-        self.lateralidad = lateralidad
+        
+        # Lateralidad normalizada
+        self.lateralidad = str(lateralidad).strip().upper()
         self.proyeccion = proyeccion
+        
+        # Datos Técnicos
         self.fuerza_compresion = fuerza_compresion
         self.tension_tubo = tension_tubo
         self.espesor_mama_estudio = int(espesor_mama_estudio) 
@@ -25,6 +29,8 @@ class Estudio:
         self.carga = float(carga)
         self.tiempo_exposicion = float(tiempo_exposicion)
         self.filtro = filtro
+        
+        # Dosis y Física
         self.kerma_entrada = float(kerma_entrada)
         self.dosis_glandular = float(dosis_glandular)
         self.distancia_foco_paciente = float(str(distancia_foco_paciente).replace(',', '.'))
@@ -32,31 +38,44 @@ class Estudio:
         self.factor_magnificacion = float(factor_magnificacion)
         self.rejilla = rejilla
         self.temperatura = float(temperatura)
+        self.grupo_espesor = grupo_espesor
+
+        # --- ATRIBUTOS DISCRIMINADOS POR MAMA ---
+        # Se calculan automáticamente al instanciar el objeto
+        self.dosis_der, self.dosis_izq = self.calcular_dosis_por_mama()
+        self.espesor_der, self.espesor_izq = self.calcular_espesor_por_mama()
+
+    # --- MÉTODOS DE CÁLCULO ---
+
+    def calcular_dosis_por_mama(self):
+        """Asigna la dosis glandular al lado correspondiente."""
+        d_der = 0.0
+        d_izq = 0.0
+        if 'D' in self.lateralidad or 'R' in self.lateralidad:
+            d_der = self.dosis_glandular
+        elif 'I' in self.lateralidad or 'L' in self.lateralidad:
+            d_izq = self.dosis_glandular
+        return d_der, d_izq
+
+    def calcular_espesor_por_mama(self):
+        """Asigna el espesor de la mama al lado correspondiente."""
+        e_der = 0
+        e_izq = 0
+        if 'D' in self.lateralidad or 'R' in self.lateralidad:
+            e_der = self.espesor_mama_estudio
+        elif 'I' in self.lateralidad or 'L' in self.lateralidad:
+            e_izq = self.espesor_mama_estudio
+        return e_der, e_izq
+
+    def calcular_dosis_glandular_total(self) -> float:
+        return self.dosis_glandular
+
+    def calcular_dosis_efectiva(self) -> float:
+        return self.dosis_glandular * 0.12
 
     def __repr__(self):
-         return (
-        f"Estudio( "
-        f"id_paciente={self.id_paciente},"
-        f"tipo_actividad = {self.tipo_actividad}, "
-        f"prestacion_realizada = {self.prestacion_realizada}, "
-        f"hora_adquisicion = {self.hora_adquisicion}, \n"
-        f"fecha_realizacion = {self.fecha_realizacion}, "
-        f"lateralidad = {self.lateralidad}, "
-        f"proyeccion = {self.proyeccion}, \n"
-        f"fuerza_compresion = {self.fuerza_compresion}, "
-        f"tension_tubo = {self.tension_tubo}, "
-
-        f"corriente_tubo = {self.corriente_tubo}, \n"
-        f"carga = {self.carga}, "
-        f"tiempo_exposicion = {self.tiempo_exposicion}, "
-        f"filtro = {self.filtro}, \n"
-        f"kerma_entrada = {self.kerma_entrada}, "
-        f"dosis_glandular = {self.dosis_glandular}, "
-        f"distancia_foco_paciente = {self.distancia_foco_paciente}, \n"
-        f"distancia_foco_mama = {self.distancia_foco_mama}, "
-        f"factor_magnificacion = {self.factor_magnificacion}, "
-        f"rejilla = {self.rejilla}, \n"
-        f"temperatura = {self.temperatura}, "
-        f"grupo_espesor = {self.grupo_espesor}"
-        f")\n"
-    )
+        return (
+            f"Estudio(ID={self.id_paciente}, Lat={self.lateralidad}, "
+            f"Espesor_D={self.espesor_der}, Espesor_I={self.espesor_izq}, "
+            f"Dosis={self.dosis_glandular})"
+        )
