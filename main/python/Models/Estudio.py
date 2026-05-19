@@ -40,12 +40,12 @@ class Estudio:
         self.temperatura = float(temperatura)
         self.grupo_espesor = grupo_espesor
 
-        # --- ATRIBUTOS DISCRIMINADOS POR MAMA ---
+        # Atributos discriminados por mama (Se crea el objeto, se realizan los calculos y se guardan por separado) 
         # Se calculan automáticamente al instanciar el objeto
         self.dosis_der, self.dosis_izq = self.calcular_dosis_por_mama()
         self.espesor_der, self.espesor_izq = self.calcular_espesor_por_mama()
 
-    # --- MÉTODOS DE CÁLCULO ---
+    # Métodos de Cálculo
 
     def calcular_dosis_por_mama(self):
         """Asigna la dosis glandular al lado correspondiente."""

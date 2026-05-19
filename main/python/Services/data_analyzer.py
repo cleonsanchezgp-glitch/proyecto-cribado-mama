@@ -38,7 +38,6 @@ def obtener_datos_graficos(pacientes):
     for p in pacientes:
         # Usamos el atributo espesor_mama_actual del objeto Paciente
         tipo = deducir_densidad(p.espesor_mama_actual)
-        # 💡 AQUÍ USAMOS EL NUEVO MÉTODO DEL OBJETO
         dosis = p.calcular_dosis_glandular_total()
         datos_por_densidad[tipo].append(dosis)
         
@@ -139,14 +138,14 @@ def obtener_datos_graficos(pacientes):
         n = len(lista_dosis)
         prop = n / total_pacientes if total_pacientes > 0 else 0
         
-        # 1. Datos para barras de progreso
+        #Datos para barras de progreso
         datos_densidad.append({
             "proportion": float(prop), 
             "pct_text": f"{int(prop * 100)}%", 
             "n": str(n)
         })
         
-        # 2. Datos para el gráfico comparativo (EUREF vs Real)
+        #Datos para el gráfico comparativo (EUREF vs Real)
         dosis_media = np.mean(lista_dosis) if n > 0 else 0.0
         datos_grafico.append({
             "label": f"Tipo {letra}", 
@@ -155,4 +154,3 @@ def obtener_datos_graficos(pacientes):
         })
         
     return datos_densidad, datos_grafico
-# Aquí irían también obtener_metricas_dashboard y obtener_datos_historial...

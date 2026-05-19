@@ -2,7 +2,7 @@ import pandas as pd
 from main.python.Models.Paciente import Paciente
 from main.python.Models.Estudio import Estudio
 
-# --- NOMBRES EXACTOS CONFIRMADOS ---
+# Nombres Confirmados
 ALIASES = {
     'edad': ['Edad'],
     'espesor': ['Espesor de Mama Comprimida (mm)'],
@@ -54,7 +54,7 @@ def procesar_archivo_a_objetos(ruta_archivo):
         else:
             return []
 
-        # LIMPIEZA: Quitamos saltos de línea de las cabeceras
+        # Limpieza: Quitamos saltos de línea de las cabeceras
         df.columns = [str(col).replace('\n', ' ').replace('\r', ' ').replace('  ', ' ').strip() for col in df.columns]
 
         def buscar_valor(fila_datos, lista_nombres, tipo_dato):
@@ -73,7 +73,7 @@ def procesar_archivo_a_objetos(ruta_archivo):
                                 pass
             return tipo_dato() if tipo_dato != str else ""
 
-        # --- LÓGICA DE AGRUPACIÓN SECUENCIAL ---
+        # Lógica de agrupación secuencial 
         pacientes_creados = []
         paciente_actual = None
         ultima_clave_tiempo = None
