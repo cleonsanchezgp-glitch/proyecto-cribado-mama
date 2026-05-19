@@ -50,17 +50,9 @@ class ViewCargar(QWidget):
         # Al seleccionar un archivo: cambia el estilo a verde y muestra el nombre del archivo.
         # slot_key identifica el tipo de archivo para selected_files.
         file_slots = [
-            ("dicom", "📁 Archivos DICOM (.dcm)",
-             "Arrastra los archivos DICOM aquí o haz clic para seleccionar"),
-            # Archivos de imagen mamográfica en formato DICOM exportados desde el PACS
-
             ("ris",   "📄 Informe RIS / CSV",
              "Exportación del sistema RIS en formato CSV o Excel"),
             # Datos clínicos y de la exploración exportados desde el sistema RIS
-
-            ("meta",  "📋 Metadatos adicionales",
-             "Archivo JSON o XML con parámetros de adquisición"),
-            # Parámetros técnicos de adquisición no incluidos en el DICOM estándar
         ]
 
         for slot_key, title, hint in file_slots:

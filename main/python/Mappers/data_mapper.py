@@ -54,8 +54,41 @@ def procesar_archivo_a_objetos(ruta_archivo):
         else:
             return []
 
-        # LIMPIEZA: Quitamos saltos de línea de las cabeceras
+        # =========================================================================
+        # PROCESAMIENTO Y FILTRADO SEGURO CON PANDAS
+        # =========================================================================
+        # 1. Limpiamos las cabeceras (indispensable para mapear alias correctamente)
         df.columns = [str(col).replace('\n', ' ').replace('\r', ' ').replace('  ', ' ').strip() for col in df.columns]
+        
+        # 2. Eliminamos columnas fantasmas (como "Unnamed: X") que rompen el dropna
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
+        # 3. Arrastramos valores de celdas combinadas si las hay
+        df = df.ffill(axis=0)
+
+        # 4. FILTRADO INTELIGENTE (Dinámico por Alias):
+        # Encontramos los nombres exactos de las columnas más críticas usando tus ALIASES
+        col_fecha = next((c for c in df.columns for a in ALIASES['fecha'] if a.lower() in c.lower()), None)
+        col_hora = next((c for c in df.columns for a in ALIASES['hora'] if a.lower() in c.lower()), None)
+        col_dosis = next((c for c in df.columns for a in ALIASES['dosis'] if a.lower() in c.lower()), None)
+        col_espesor = next((c for c in df.columns for a in ALIASES['espesor'] if a.lower() in c.lower()), None)
+
+        # Definimos qué columnas NO pueden tener nulos bajo ningún concepto
+        columnas_obligatorias = [c for c in [col_fecha, col_hora, col_dosis, col_espesor] if c is not None]
+
+        if columnas_obligatorias:
+            # Eliminamos filas donde falte alguno de los datos médicos principales
+            df = df.dropna(subset=columnas_obligatorias)
+        else:
+            # Si no detecta las columnas críticas por alias, al menos elimina filas 100% vacías de basura
+            df = df.dropna(how='all')
+
+        # 5. Reseteamos los índices del DataFrame limpio
+        df = df.reset_index(drop=True)
+        
+        # Imprime una traza en la consola para auditar cuántas filas sobrevivieron al filtro
+        print(f"[Auditoría] Filas totales a procesar tras el filtrado: {len(df)}")
+        # =========================================================================
 
         def buscar_valor(fila_datos, lista_nombres, tipo_dato):
             """Busca el valor en la fila tolerando diferencias de mayúsculas/espacios."""
@@ -85,7 +118,7 @@ def procesar_archivo_a_objetos(ruta_archivo):
             # Combinamos fecha y hora para tener la marca temporal exacta
             clave_tiempo = f"{fecha_val} {hora_val}".strip()
             
-            # Si la celda viene vacía (por celdas combinadas en Excel), heredamos la de la fila anterior
+            # Si la celda viene vacía, heredamos la de la fila anterior
             if not clave_tiempo or clave_tiempo == 'nan' or clave_tiempo == 'nan nan':
                 clave_tiempo = ultima_clave_tiempo
                 

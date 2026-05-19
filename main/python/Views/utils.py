@@ -565,30 +565,6 @@ class Topbar(QWidget):
         )
         layout.addWidget(self.title, 1)
 
-        # Botón secundario: exportar resultados del análisis actual
-        # Conectar en MainWindow: self.topbar.export_btn.clicked.connect(...)
-        self.export_btn = QPushButton("↓  Exportar")
-        self.export_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        self.export_btn.setFixedHeight(30)
-        self.export_btn.setStyleSheet(
-            f"QPushButton {{ background:transparent; color:{COLORS['text_secondary']}; "
-            f"border:0.5px solid rgba(0,0,0,0.18); border-radius:8px; "
-            "padding:0 12px; font-size:12px; }}"
-            f"QPushButton:hover {{ background:{COLORS['bg_secondary']}; }}"
-        )
-        layout.addWidget(self.export_btn)
-
-        # Botón primario: iniciar un nuevo ciclo de análisis
-        # Conectar en MainWindow: self.topbar.new_analysis_btn.clicked.connect(...)
-        self.new_analysis_btn = QPushButton("→  Nuevo análisis")
-        self.new_analysis_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        self.new_analysis_btn.setFixedHeight(30)
-        self.new_analysis_btn.setStyleSheet(
-            f"QPushButton {{ background:{COLORS['blue']}; color:#ffffff; "
-            "border:none; border-radius:8px; padding:0 14px; font-size:12px; font-weight:600; }}"
-            "QPushButton:hover { background:#0C447C; }"
-        )
-        layout.addWidget(self.new_analysis_btn)
 
     def set_title(self, text: str):
         """Actualiza el título mostrado en la topbar. Lo llama MainWindow._on_nav()."""
