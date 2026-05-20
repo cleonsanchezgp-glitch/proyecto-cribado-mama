@@ -14,11 +14,6 @@ from PySide6.QtCore import QRect
 from main.python.Views.colors import COLORS
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  FUNCIONES HELPER DE ESTILO
-#  Utilidades reutilizables para crear widgets con estilos consistentes.
-#  No contienen lógica de negocio — solo presentación.
-# ══════════════════════════════════════════════════════════════════════════════
 
 def card_style(bg="#ffffff", radius=12, border=True):
     """Devuelve un string CSS para usar como stylesheet de una tarjeta."""
@@ -90,15 +85,10 @@ def separator(horizontal=True):
     return line
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 #  WIDGET: ProgressBar
 #  Barra de progreso personalizada pintada con QPainter.
 #  Se usa en ViewResumen (distribución por densidad) y ViewDosis (cumplimiento EUREF).
-#
-#  PARA RELLENAR CON DATOS REALES:
-#      bar.set_value(proporcion_float, color_hex)
-#      Ejemplo: bar.set_value(0.94, "#3B6D11")
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 class ProgressBar(QWidget):
     """Barra de progreso horizontal pintada a mano."""
@@ -144,17 +134,12 @@ class ProgressBar(QWidget):
         p.end()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  WIDGET: BarChart
 #  Gráfico de barras agrupadas (año anterior / año actual) para dosis AGD.
 #  Se usa en ViewResumen, panel "Dosis media AGD por grupo de densidad".
 #
-#  PARA RELLENAR CON DATOS REALES:
-#      chart.set_data([
-#          ("Tipo A", valor_anterior, valor_actual, color_claro, color_oscuro),
-#          ...
-#      ])
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 class BarChart(QWidget):
 
@@ -166,7 +151,8 @@ class BarChart(QWidget):
 
     def set_data(self, data: list):
         """
-        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Entrada de datos. 
+
         Inyecta los datos del gráfico de barras.f
 
         Formato esperado:
@@ -190,7 +176,7 @@ class BarChart(QWidget):
         chart_h = h - margin_b - margin_t
         chart_w = w - margin_l - 12
         
-        # --- CONFIGURACIÓN DE ESCALA ---
+        # Configuración de escala
         # Ahora la escala máxima es 10.0 mGy
         max_scale = 10.0 
 
@@ -210,7 +196,7 @@ class BarChart(QWidget):
             p.setFont(font)
             p.drawText(0, y + 4, 34, 14, Qt.AlignRight, f"{y_val:.1f}")
 
-        # ── Dibujo de Barras ─────────────────────────────────────────────
+        # Dibujo de Barras
         # Ajuste: Limitamos el ancho del grupo para que no se vea gigante con un solo dato
         num_grupos = len(self._data)
         group_w = min(chart_w / num_grupos, 120) 
@@ -243,18 +229,12 @@ class BarChart(QWidget):
         p.end()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 #  WIDGET: ScatterPlot
 #  Gráfico de dispersión Espesor (mm) vs. AGD (mGy) coloreado por densidad.
 #  Se usa en ViewDosis, panel "Dispersión Espesor vs. AGD".
 #  Incluye línea de referencia EUREF a 2,5 mGy.
-#
-#  PARA RELLENAR CON DATOS REALES:
-#      scatter.set_data([
-#          (espesor_mm, agd_mGy, densidad_idx),   # densidad: 0=A, 1=B, 2=C, 3=D
-#          ...
-#      ])
-# ══════════════════════════════════════════════════════════════════════════════
+
+
 
 class ScatterPlot(QWidget):
 
@@ -269,7 +249,8 @@ class ScatterPlot(QWidget):
 
     def set_data(self, points: list):
         """
-        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Entrada de datos. 
+
         Inyecta los puntos del scatter plot.
 
         Formato esperado:
@@ -301,13 +282,13 @@ class ScatterPlot(QWidget):
         rango_x = x_max - x_min
         punto_medio = x_min + rango_x / 2
 
-        # ── Ejes X e Y ────────────────────────────────────────────────────
+        # Ejes X e Y
         p.setPen(QPen(QColor(0, 0, 0, 50), 1))
         p.drawLine(ml, mt, ml, h - mb)       # Eje Y (vertical)
         p.drawLine(ml, h - mb, w - mr, h - mb)  # Eje X (horizontal)
 
-        # ── Línea de referencia EUREF a 2,5 mGy ──────────────────────────
-        # TODO: hacer configurable desde ViewConfig (parámetro "Límite AGD tipo B")
+        #  Línea de referencia EUREF a 2,5 mGy
+ 
         ref_y = mt + int(chart_h * (1 - 2.5 / 4.5))
         p.setPen(QPen(QColor("#D85A30"), 1, Qt.DashLine))
         p.drawLine(ml, ref_y, w - mr, ref_y)
@@ -317,7 +298,7 @@ class ScatterPlot(QWidget):
         p.setFont(font)
         p.drawText(w - mr - 50, ref_y - -2, 50, 12, Qt.AlignRight, "Ref. EUREF")
 
-        # ── Etiquetas del eje X (espesor en mm) ───────────────────────────
+        # Etiquetas del eje X (espesor en mm) 
         p.setPen(QColor("#9a9890"))
         font2 = p.font()
         font2.setPointSize(7)
@@ -327,10 +308,10 @@ class ScatterPlot(QWidget):
             p.drawText(x - 15, h - mb + 6, 30, 12, Qt.AlignCenter, txt)
 
 
-        clip_rect = QRect(ml, mt, chart_w, chart_h)  # ✅ recorta al área del gráfico
+        clip_rect = QRect(ml, mt, chart_w, chart_h)  
         p.setClipRect(clip_rect)
 
-        # ── Puntos del scatter (un punto por paciente) ────────────────────
+        # Puntos del scatter (un punto por paciente) 
         for thickness, agd, d in self._points:
             # Mapear espesor (25–90mm) al ancho del gráfico
             xp = ml + int(chart_w * (thickness - x_min) / rango_x)
@@ -345,19 +326,15 @@ class ScatterPlot(QWidget):
         p.end()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  COMPONENTE: Sidebar
 #  Panel de navegación lateral izquierdo.
 #  Contiene: logo, menú de navegación por secciones, y footer de estado de conexión.
-#
-#  PARA ACTUALIZAR EL ESTADO DE CONEXIÓN DESDE UN CONTROLLER:
-#      sidebar.set_connection_status(True, "Conectado a PACS")
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 class Sidebar(QWidget):
 
     # Estructura del menú: (sección, [(id_vista, nombre, icono), ...])
-    # Para añadir una nueva vista: agregar una tupla aquí y registrarla en MainWindow.views
     NAV_ITEMS = [
         ("Análisis", [
             ("resumen",   "Resumen",          "◈"),
@@ -429,7 +406,7 @@ class Sidebar(QWidget):
         ll.addWidget(sub_lbl)
         layout.addWidget(logo_w)
 
-        # ── Menú de navegación (scrollable) ──────────────────────────────
+        # Menú de navegación (scrollable) 
         # Cada ítem es un QPushButton checkable que activa la vista correspondiente
         nav_scroll = QScrollArea()
         nav_scroll.setWidgetResizable(True)
@@ -477,9 +454,8 @@ class Sidebar(QWidget):
         nav_scroll.setWidget(nav_container)
         layout.addWidget(nav_scroll, 1)
 
-        # ── Footer de estado de conexión ──────────────────────────────────
-        # Muestra si la aplicación está conectada a PACS/RIS o en modo offline
-        # Para actualizar: sidebar.set_connection_status(True/False, "texto")
+        # Footer de estado de conexión 
+
         footer = QWidget()
         footer.setObjectName("SidebarFooter")
         footer.setFixedHeight(40)
@@ -536,15 +512,10 @@ class Sidebar(QWidget):
             self._status_label.setText(text)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 #  COMPONENTE: Topbar
 #  Barra superior horizontal con título de la vista activa y botones de acción.
 #  Contiene: título dinámico, botón "Exportar" y botón "Nuevo análisis".
-#
-#  PARA CONECTAR LOS BOTONES DESDE MainWindow:
-#      topbar.export_btn.clicked.connect(ctrl.on_export)
-#      topbar.new_analysis_btn.clicked.connect(ctrl.on_new_analysis)
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 class Topbar(QWidget):
     def __init__(self, parent=None):
@@ -565,18 +536,16 @@ class Topbar(QWidget):
         )
         layout.addWidget(self.title, 1)
 
-
     def set_title(self, text: str):
         """Actualiza el título mostrado en la topbar. Lo llama MainWindow._on_nav()."""
         self.title.setText(text)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 #  COMPONENTE: Panel
 #  Contenedor con cabecera de título y cuerpo de contenido.
 #  Es el bloque visual base de todas las vistas (tarjetas blancas con borde).
 #  Uso: panel = Panel("Título"); panel.body().addWidget(mi_widget)
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 class Panel(QWidget):
 
@@ -616,14 +585,11 @@ class Panel(QWidget):
         return self._body_layout
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  COMPONENTE: MetricCard
 #  Tarjeta KPI con título, valor numérico grande, subtítulo y badge de estado.
 #  Se usa en ViewResumen (fila superior de 4 tarjetas).
-#
-#  PARA ACTUALIZAR CON DATOS REALES:
-#      card.set_values("8.342", "Exploración 2023–2024", "+312 nuevo lote", "blue")
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 class MetricCard(QWidget):
 

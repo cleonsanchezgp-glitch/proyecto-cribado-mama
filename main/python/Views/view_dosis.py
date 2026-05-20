@@ -7,24 +7,6 @@ from main.python.Views.colors import COLORS
 from main.python.Views.utils import Panel, ProgressBar, ScatterPlot, badge, label
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  VISTA: Análisis de dosis
-#  Muestra el análisis detallado de la dosis AGD del lote.
-#
-#  ESTRUCTURA VISUAL:
-#    ┌──────────────┬──────────────┬──────────────┐
-#    │ AGD media    │ Percentil 75 │ Percentil 95 │   ← Tarjetas estadísticas
-#    ├──────────────┴──────────────┴──────────────┤
-#    │  Scatter plot: Espesor vs. AGD             │   ← Gráfico de dispersión
-#    ├─────────────────────────────────────────────┤
-#    │  Cumplimiento EUREF por tipo de densidad   │   ← Barras de cumplimiento
-#    └─────────────────────────────────────────────┘
-#
-#  MÉTODOS DE DATOS (llamar desde DosisController):
-#    populate_stats(data)       → tarjetas AGD media / P75 / P95
-#    populate_scatter(points)   → scatter plot espesor vs AGD
-#    populate_compliance(data)  → tabla de cumplimiento EUREF
-# ══════════════════════════════════════════════════════════════════════════════
 
 class ViewDosis(QWidget):
 
@@ -35,10 +17,10 @@ class ViewDosis(QWidget):
         main.setContentsMargins(20, 20, 20, 20)
         main.setSpacing(16)
 
-        # ── SECCIÓN 1: Tarjetas de estadísticas de dosis ──────────────────
+        #  Tarjetas de estadísticas de dosis 
         # 3 tarjetas en fila: AGD media global, percentil 75 y percentil 95.
         # Los percentiles permiten identificar casos extremos de dosis alta.
-        # Rellenar con: populate_stats(["1,84 mGy", "2,41 mGy", "3,18 mGy"])
+
         stats_row = QWidget()
         stats_row.setStyleSheet("background:transparent;")
         sg = QGridLayout(stats_row)
@@ -66,7 +48,7 @@ class ViewDosis(QWidget):
 
         main.addWidget(stats_row)
 
-        # ── SECCIÓN 2: Scatter plot Espesor vs. AGD ───────────────────────
+        # Scatter plot Espesor vs. AGD 
         # Gráfico de dispersión donde cada punto es un paciente.
         # Eje X = espesor mamario comprimido (mm), Eje Y = dosis AGD (mGy).
         # Los puntos se colorean por tipo de densidad (A=verde, B=azul, C=naranja, D=rojo).
@@ -93,11 +75,11 @@ class ViewDosis(QWidget):
         scatter_panel.body().addWidget(leg)
         main.addWidget(scatter_panel)
 
-        # ── SECCIÓN 3: Tabla de cumplimiento EUREF por tipo de densidad ───
+        # Tabla de cumplimiento EUREF por tipo de densidad 
         # Una fila por cada tipo de densidad (A/B/C/D).
         # Cada fila muestra: nombre + barra de progreso + porcentaje + badge OK/Revisar.
         # Un tipo está "OK" si el % de pacientes dentro del límite EUREF supera el umbral.
-        # Rellenar con: populate_compliance(data)
+
         comply_panel = Panel("Cumplimiento EUREF por tipo de densidad")
         self._comply_rows = []   # Lista de (ProgressBar, lbl_pct, badge) para actualizar
         for tipo in ["Tipo A", "Tipo B", "Tipo C", "Tipo D"]:
@@ -127,14 +109,11 @@ class ViewDosis(QWidget):
         main.addWidget(comply_panel)
         main.addStretch()
 
-    # ══════════════════════════════════════════════════════════════════════
-    #  MÉTODOS DE DATOS — Llamar desde DosisController
-    # ══════════════════════════════════════════════════════════════════════
-
     def populate_stats(self, data: list):
         """
-        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
-        Rellena las 3 tarjetas de estadísticas de dosis.
+        Entrada de datos.
+
+         Rellena las 3 tarjetas de estadísticas de dosis.
 
         data: list de 3 strings ya formateados con unidades [media, p75, p95]
 
@@ -146,7 +125,8 @@ class ViewDosis(QWidget):
 
     def populate_scatter(self, points: list):
         """
-        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Entrada de datos.
+
         Rellena el scatter plot con los datos de pacientes.
         Delega en ScatterPlot.set_data(points) — ver su docstring para el formato.
 
@@ -157,7 +137,8 @@ class ViewDosis(QWidget):
 
     def populate_compliance(self, data: list):
         """
-        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        Entrada de datos.
+        
         Rellena la tabla de cumplimiento EUREF por tipo de densidad.
 
         data: list de 4 dicts en orden A/B/C/D
