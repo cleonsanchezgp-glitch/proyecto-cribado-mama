@@ -419,7 +419,7 @@ class Sidebar(QWidget):
         icon_lbl.setFixedSize(32, 32)
         icon_lbl.setAlignment(Qt.AlignCenter)
 
-        title_lbl = label("Cribado Mamá", 13, COLORS["text_primary"], "bold")
+        title_lbl = label("Cribado Mama", 13, COLORS["text_primary"], "bold")
         title_lbl.setStyleSheet(title_lbl.styleSheet() + "padding-left: 40px;")
         sub_lbl = label("H.U. Miguel Servet", 11, COLORS["text_secondary"])
         sub_lbl.setStyleSheet(sub_lbl.styleSheet() + "padding-left: 40px;")
