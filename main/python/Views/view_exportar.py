@@ -21,7 +21,7 @@ class ViewExportar(QWidget):
         main.setContentsMargins(20, 20, 20, 20)
         main.setSpacing(16)
 
-        # ── Panel principal de exportación ────────────────────────────────
+        # Panel principal de exportación
         export_panel = Panel("Exportar resultados")
 
         # Descripción introductoria
@@ -32,7 +32,7 @@ class ViewExportar(QWidget):
         export_panel.body().addWidget(intro)
         export_panel.body().addWidget(separator())
 
-        # ── Opción 1: Exportar a CSV ───────────────────────────────────────
+        #  Exportar a CSV
         csv_row = QWidget()
         csv_row.setStyleSheet(
             f"background:{COLORS['bg_secondary']}; border-radius:8px; border:none;"
@@ -72,8 +72,8 @@ class ViewExportar(QWidget):
 
         export_panel.body().addWidget(separator())
 
-        # ── Opción 2: Insertar en base de datos ───────────────────────────
-        db_row = QWidget()
+        # Insertar en base de datos 
+        db_row = QWidget() 
         db_row.setStyleSheet(
             f"background:{COLORS['bg_secondary']}; border-radius:8px; border:none;"
         )
@@ -134,13 +134,13 @@ class ViewExportar(QWidget):
         )
 
         if reply == QMessageBox.Yes:
-            # 2. Feedback visual (Opcional: cambiar cursor a espera)
+
             self.setCursor(Qt.WaitCursor)
             self.export_db_btn.setEnabled(False)
             self.export_db_btn.setText("Conectando con Oracle...")
 
             try:
-                # 3. Llamada al servicio que creamos
+            
                 insert_data_DB()
                 
                 QMessageBox.information(
@@ -154,7 +154,7 @@ class ViewExportar(QWidget):
                     f"No se pudo conectar con Oracle:\n{str(e)}"
                 )
             finally:
-                # 4. Restaurar estado de la UI
+             
                 self.setCursor(Qt.ArrowCursor)
                 self.export_db_btn.setEnabled(True)
                 self.export_db_btn.setText("Sincronizar con Base de Datos")

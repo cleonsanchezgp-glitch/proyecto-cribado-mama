@@ -24,7 +24,7 @@ def generate_csv_doc(filename):
                          if hasattr(estudio.fecha_realizacion, 'isoformat') 
                          else estudio.fecha_realizacion)
             
-            # --- NUEVOS CÁLCULOS EXTRAÍDOS DEL OBJETO ESTUDIO ---
+            # Calculos extraídos del objeto Estudio
             dosis_der, dosis_izq = estudio.calcular_dosis_por_mama()
             esp_der, esp_izq = estudio.calcular_espesor_por_mama()
             dosis_efectiva = estudio.calcular_dosis_efectiva()
@@ -54,7 +54,6 @@ def generate_csv_doc(filename):
                     'espesor_mama_derecha': esp_der,
                     'dosis_efectiva': dosis_efectiva,
                     'grupo_espesor': getattr(estudio, 'grupo_espesor', ''),
-                    # ------------------------------------
                     'distancia_foco_paciente': estudio.distancia_foco_paciente,
                     'distancia_foco_mama': estudio.distancia_foco_mama,
                     'factor_magnificacion': estudio.factor_magnificacion,
@@ -82,14 +81,12 @@ def generate_csv_doc(filename):
                     'filtro': estudio.filtro,
                     'kerma_entrada': estudio.kerma_entrada,
                     'dosis_glandular': estudio.dosis_glandular,
-                    # --- NUEVAS COLUMNAS EN EL EXPORT ---
                     'dosis_mama_izquierda': dosis_izq,
                     'espesor_mama_izquierda': esp_izq,
                     'dosis_mama_derecha': "N/A",
                     'espesor_mama_derecha': "N/A",
                     'dosis_efectiva': dosis_efectiva,
                     'grupo_espesor': getattr(estudio, 'grupo_espesor', ''),
-                    # ------------------------------------
                     'distancia_foco_paciente': estudio.distancia_foco_paciente,
                     'distancia_foco_mama': estudio.distancia_foco_mama,
                     'factor_magnificacion': estudio.factor_magnificacion,
@@ -135,7 +132,7 @@ def insert_data_DB():
         cursor = connection.cursor()
         
         for paciente in temporal_save_data.pacientes_memoria:
-            # 1. INSERTAR O ACTUALIZAR PACIENTE
+            # Insertar o actualizar el Paciente
             # Usamos MERGE para evitar errores de clave primaria duplicada
             cursor.execute("""
                 MERGE INTO PACIENTE p
@@ -152,15 +149,15 @@ def insert_data_DB():
                 'esp': paciente.espesor_mama_actual
             })
 
-            # 2. INSERTAR CADA ESTUDIO DEL PACIENTE
+            # Insertar los Estudios de cada Paciente
             for estudio in paciente.estudios:
-                # 1. Normalización de Hora (a String HH:MM:SS)
+                # Normalización de Hora (a String HH:MM:SS)
                 if hasattr(estudio.hora_adquisicion, 'strftime'):
                     hora_str = estudio.hora_adquisicion.strftime('%H:%M:%S')
                 else:
                     hora_str = str(estudio.hora_adquisicion)[:8] # Cortamos si es muy largo
 
-                # 2. Normalización de Fecha (Evita el ORA-01830)
+                # Normalización de Fecha (Evitamos el ORA-01830)
                 fecha_val = estudio.fecha_realizacion
                 if hasattr(fecha_val, 'date'): 
                     # Si es un datetime de Python, extraemos solo la fecha
@@ -194,7 +191,7 @@ def insert_data_DB():
                     'tipo': estudio.tipo_actividad,
                     'prest': estudio.prestacion_realizada,
                     'hora': hora_str,
-                    'fecha': fecha_val, # Ahora es un objeto date puro
+                    'fecha': fecha_val, 
                     'lat': estudio.lateralidad,
                     'proy': estudio.proyeccion,
                     'fuerza': estudio.fuerza_compresion,

@@ -1,4 +1,3 @@
-# estado_compartido.py
 from typing import List
 
 from main.python.Models.Estudio import Estudio

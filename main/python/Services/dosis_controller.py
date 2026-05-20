@@ -8,9 +8,7 @@ class dosis_controller:
         self.pacientes = pacientes
         self.cargar_datos_en_pantalla()
 
-    # ══════════════════════════════════════════════════════════════════
-    #  MÉTODOS AUXILIARES
-    # ══════════════════════════════════════════════════════════════════
+    # Métodos Auxiliares
 
     def _tipo_densidad(self, espesor: int) -> int:
         """
@@ -37,9 +35,7 @@ class dosis_controller:
                 dosis.append(estudio.dosis_glandular)
         return dosis
 
-    # ══════════════════════════════════════════════════════════════════
-    #  MÉTODOS DE CÁLCULO
-    # ══════════════════════════════════════════════════════════════════
+    #  Métodos de cálculo
 
     def get_stats(self) -> list[str]:
         """
@@ -132,9 +128,7 @@ class dosis_controller:
 
         return resultado
 
-    # ══════════════════════════════════════════════════════════════════
-    #  MÉTODO PRINCIPAL
-    # ══════════════════════════════════════════════════════════════════
+    #  Método Principal
 
     def cargar_datos_en_pantalla(self):
         self.view.populate_stats(self.get_stats())

@@ -8,27 +8,6 @@ from main.python.Views.colors import COLORS
 from main.python.Views.utils import Panel, label
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  VISTA: Cargar archivos
-#  Permite al usuario seleccionar los tres tipos de archivos de entrada
-#  necesarios para ejecutar el análisis: DICOM, RIS/CSV y metadatos.
-#
-#  ESTRUCTURA VISUAL:
-#    ┌──────────────────────────────────────────┐
-#    │  [Zona drag-drop] Archivos DICOM (.dcm)  │
-#    │  [Zona drag-drop] Informe RIS / CSV      │
-#    │  [Zona drag-drop] Metadatos adicionales  │
-#    │  [Botón] Procesar archivos cargados      │
-#    └──────────────────────────────────────────┘
-#
-#  ATRIBUTOS PÚBLICOS (acceder desde CargarController):
-#    selected_files   → dict {"dicom": path, "ris": path, "meta": path}
-#    process_btn      → QPushButton: conectar .clicked para lanzar el procesado
-#
-#  CONEXIÓN DESDE MainWindow:
-#    view.process_btn.clicked.connect(ctrl.on_process_files)
-# ══════════════════════════════════════════════════════════════════════════════
-
 class ViewCargar(QWidget):
 
     def __init__(self, parent=None):
@@ -45,7 +24,7 @@ class ViewCargar(QWidget):
 
         upload_panel = Panel("Cargar nuevos archivos")
 
-        # ── SECCIÓN 1: Zonas de selección de archivos ─────────────────────
+        #  Zonas de selección de archivos
         # Tres botones tipo "drop zone" que abren el diálogo de selección de archivo.
         # Al seleccionar un archivo: cambia el estilo a verde y muestra el nombre del archivo.
         # slot_key identifica el tipo de archivo para selected_files.
@@ -95,7 +74,7 @@ class ViewCargar(QWidget):
             drop_btn.clicked.connect(make_handler())
             upload_panel.body().addWidget(drop_btn)
 
-        # ── SECCIÓN 2: Botón de procesado ─────────────────────────────────
+        #  Botón de procesado 
         # Botón principal que lanza el pipeline de análisis con los archivos cargados.
         # Se expone como atributo público para conectarlo desde MainWindow o CargarController:
         #   view.process_btn.clicked.connect(ctrl.on_process_files)

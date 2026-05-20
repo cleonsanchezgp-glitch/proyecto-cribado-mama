@@ -2,7 +2,9 @@ from typing import List
 from main.python.Models.Estudio import Estudio
 
 class Paciente:
-    #tengo que agregar un id paciente 
+
+    #Representamos a un Paciente en el sistema medico, el cual gestionamos sus datos clínicos 
+    # y el historial de los estudios mamográficos realizados.
     def __init__(self, id: str, edad: str, espesor_mama_actual: int):
         self.id = id 
         self.edad = edad 
@@ -12,9 +14,7 @@ class Paciente:
     def agregar_estudio(self, estudio: Estudio):
         self.estudios.append(estudio)
 
-    # --- NUEVOS MÉTODOS MATEMÁTICOS ---
     
-
     def __str__(self):
         return (
             f"Paciente: {self.id} | Edad: {self.edad} | "

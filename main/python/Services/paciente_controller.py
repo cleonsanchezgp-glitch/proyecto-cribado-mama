@@ -10,10 +10,6 @@ from main.python.Services import data_cleaner
 class paciente_controller:
 
 
-
-
-
-
     def __init__(self, ruta_archivo: str):
         self.ruta_archivo = ruta_archivo
         self.pacientes: list[Paciente] = []
@@ -86,7 +82,6 @@ class paciente_controller:
         extension = extension.lower()
 
         #Explicamos que si la extension es csv utilice Pandas para leer el archivo
-        #
         if extension == '.csv':
             df = pd.read_csv(self.ruta_archivo, header=2)
         elif extension in ['.xlsx', '.xls']:
@@ -180,7 +175,7 @@ class paciente_controller:
             for i, e in enumerate(p.estudios, start=1):
                 print(f"  Estudio {i}: {e}")
 
-# --- INICIO DEL PROGRAMA ---
+# Inicio del programa
 if __name__ == "__main__":
     app = paciente_controller(r"C:\Users\User\Downloads\imagenes mam jul_dic26 (2).xlsx")
     app.ejecutar()

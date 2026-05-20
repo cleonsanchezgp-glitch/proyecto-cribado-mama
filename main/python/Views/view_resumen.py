@@ -7,26 +7,6 @@ from main.python.Views.colors import COLORS
 from main.python.Views.utils import BarChart, MetricCard, Panel, ProgressBar, label, separator
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  VISTA: Resumen del análisis
-#  Pantalla principal que muestra un resumen global del lote de pacientes.
-#
-#  ESTRUCTURA VISUAL:
-#    ┌─────────────────────────────────────────────────────┐
-#    │  [KPI] Pacientes  [KPI] Dosis  [KPI] Cruzados  [KPI] Desv. │
-#    ├──────────────────────────────┬──────────────────────┤
-#    │  Gráfico barras AGD          │  Estado del proceso  │
-#    │  Distribución por densidad   │  Alertas y avisos    │
-#    └──────────────────────────────┴──────────────────────┘
-#
-#  MÉTODOS DE DATOS (llamar desde ResumenController):
-#    populate_metrics(data)   → fila de 4 tarjetas KPI
-#    populate_chart(data)     → gráfico de barras AGD
-#    populate_density(data)   → barras de distribución por tipo
-#    populate_steps(steps)    → estado del pipeline
-#    populate_alerts(alerts)  → panel de alertas
-# ══════════════════════════════════════════════════════════════════════════════
-
 class ViewResumen(QWidget):
 
     def __init__(self, parent=None):
@@ -36,7 +16,7 @@ class ViewResumen(QWidget):
         main.setContentsMargins(20, 20, 20, 20)
         main.setSpacing(16)
 
-        # ── SECCIÓN 1: Fila de tarjetas KPI ──────────────────────────────
+        # Fila de tarjetas KPI 
         # 4 tarjetas métricas en la parte superior: pacientes, dosis, cruzados, desviación.
         # Se rellenan con populate_metrics(data) desde el controller.
         cards_row = QWidget()
@@ -59,7 +39,7 @@ class ViewResumen(QWidget):
 
         main.addWidget(cards_row)
 
-        # ── SECCIÓN 2: Layout de dos columnas ────────────────────────────
+        # Layout de dos columnas 
         # Columna izquierda (ancha): gráficos y distribución
         # Columna derecha (fija 300px): estado del proceso y alertas
         two_col = QWidget()
@@ -134,7 +114,7 @@ class ViewResumen(QWidget):
         lv.addWidget(dens_panel)
         tc.addWidget(left, 1)
 
-        # ── COLUMNA DERECHA ───────────────────────────────────────────────
+        #  Columna derecha
         right = QWidget()
         right.setStyleSheet("background:transparent;")
         rv = QVBoxLayout(right)
@@ -204,9 +184,7 @@ class ViewResumen(QWidget):
         main.addWidget(two_col)
         main.addStretch()
 
-    # ══════════════════════════════════════════════════════════════════════
-    #  MÉTODOS DE DATOS — Llamar desde ResumenController
-    # ══════════════════════════════════════════════════════════════════════
+
 
     def populate_metrics(self, data: list):
         """
@@ -244,17 +222,11 @@ class ViewResumen(QWidget):
             ("#F4B8A0", "#D85A30"),   # Tipo D
         ]
         
-        # --- AJUSTE DE MARGEN Y ESCALA ---
-        # Si antes era 50 y quieres que quepan valores de hasta 10, 
-        # bajamos el factor a 20 o 25 para que 10 mGy * 20 = 200px de altura.
-        factor_escala = 20 
         
         tuplas = []
         for i, d in enumerate(data):
             label_txt = d.get("label", f"Tipo {i}")
-            
-            # ENVIAMOS EL VALOR REAL (Sin el * 50)
-            # Si tus datos ya vienen en mGy (ej: 1.5, 2.3), pásalos así:
+
             v1 = d.get("value1", 0.0)  
             v2 = d.get("value2", 0.0) 
             
@@ -286,7 +258,7 @@ class ViewResumen(QWidget):
 
     def populate_steps(self, steps: list):
         """
-        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        ── Punto de entrada de datos
         Actualiza el estado visual de cada paso del pipeline.
 
         steps: list de 5 dicts en orden (mismo orden que la UI)
@@ -319,7 +291,7 @@ class ViewResumen(QWidget):
 
     def populate_alerts(self, alerts: list):
         """
-        ── PUNTO DE ENTRADA DE DATOS ──────────────────────────────────────
+        ── Punto de entrada de datos
         Vacía el panel de alertas y lo rellena con las alertas actuales.
 
         alerts: list de dicts

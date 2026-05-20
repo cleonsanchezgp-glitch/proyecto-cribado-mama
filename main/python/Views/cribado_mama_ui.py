@@ -1,37 +1,3 @@
-"""
-╔══════════════════════════════════════════════════════════════════════════════╗
-║            Cribado Mamá — H.U. Miguel Servet                                ║
-║            Interfaz PySide6  ·  Versión modular sin datos hardcoded         ║
-║                                                                              ║
-║  ESTRUCTURA DE ARCHIVOS RECOMENDADA                                          ║
-║  ─────────────────────────────────────────────────────────────────────────  ║
-║  cribado_mama_ui.py       ← Este archivo (UI pura, sin datos)               ║
-║  main_window.py           ← Clase MainWindow + punto de entrada main()      ║
-║  view_resumen.py          ← Clase ViewResumen                               ║
-║  view_dosis.py            ← Clase ViewDosis                                 ║
-║  view_historial.py        ← Clase ViewHistorial                             ║
-║  view_cargar.py           ← Clase ViewCargar                                ║
-║  view_config.py           ← Clase ViewConfig                                ║
-║  controllers/             ← Lógica de negocio desacoplada de la UI          ║
-║      resumen_controller.py                                                   ║
-║      dosis_controller.py                                                     ║
-║      historial_controller.py                                                 ║
-║  models/                  ← Clases de datos (dataclasses / Pydantic)        ║
-║      paciente.py                                                             ║
-║      agd_result.py                                                           ║
-║                                                                              ║
-║  CÓMO CONECTAR LÓGICA A LA UI                                                ║
-║  ─────────────────────────────────────────────────────────────────────────  ║
-║  1. Cada ventana expone métodos públicos  populate_*(data)                   ║
-║     Búscalos marcados con  # ── MÉTODO PÚBLICO ──                           ║
-║  2. Instancia tu controller en MainWindow.__init__                           ║
-║  3. Llama a view.populate_*(controller.get_data())  después de cargar        ║
-║  4. Para refresco en caliente conecta señales Qt o usa un QTimer             ║
-║                                                                              ║
-║  Requiere: pip install PySide6                                               ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-"""
-
 import sys
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
@@ -47,10 +13,7 @@ from PySide6.QtGui import (
 )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  PALETA Y ESTILOS GLOBALES
-# ══════════════════════════════════════════════════════════════════════════════
-
+#Paleta y estilos globales
 COLORS = {
     "bg_primary":    "#ffffff",
     "bg_secondary":  "#f5f5f4",
@@ -90,11 +53,7 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
 """
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  HELPERS DE ESTILO
-# ══════════════════════════════════════════════════════════════════════════════
-
+# Helpers de estilo
 def card_style(bg="#ffffff", radius=12, border=True):
     b = "border: 0.5px solid rgba(0,0,0,0.10);" if border else ""
     return f"background:{bg}; border-radius:{radius}px; {b}"
@@ -138,9 +97,8 @@ def separator(horizontal=True):
     return line
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  WIDGETS REUTILIZABLES
-# ══════════════════════════════════════════════════════════════════════════════
+#  Widgets Reutilizables 
+
 
 class ProgressBar(QWidget):
     """Barra de progreso horizontal pintada a mano."""

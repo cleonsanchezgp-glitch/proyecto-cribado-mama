@@ -2,7 +2,7 @@ import pandas as pd
 from main.python.Models.Paciente import Paciente
 from main.python.Models.Estudio import Estudio
 
-# --- NOMBRES EXACTOS CONFIRMADOS ---
+# Nombres Confirmados
 ALIASES = {
     'edad': ['Edad'],
     'espesor': ['Espesor de Mama Comprimida (mm)'],
@@ -54,19 +54,17 @@ def procesar_archivo_a_objetos(ruta_archivo):
         else:
             return []
 
-        # =========================================================================
-        # PROCESAMIENTO Y FILTRADO SEGURO CON PANDAS
-        # =========================================================================
-        # 1. Limpiamos las cabeceras (indispensable para mapear alias correctamente)
+        # Limpieza: Quitamos saltos de línea de las cabeceras
+        # Limpiamos las cabeceras (indispensable para mapear alias correctamente)
         df.columns = [str(col).replace('\n', ' ').replace('\r', ' ').replace('  ', ' ').strip() for col in df.columns]
         
-        # 2. Eliminamos columnas fantasmas (como "Unnamed: X") que rompen el dropna
+        # Eliminamos columnas fantasmas (como "Unnamed: X") que rompen el dropna
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
-        # 3. Arrastramos valores de celdas combinadas si las hay
+        # Arrastramos valores de celdas combinadas si las hay
         df = df.ffill(axis=0)
 
-        # 4. FILTRADO INTELIGENTE (Dinámico por Alias):
+        # Filtrado Inteligente (Dinámico por Alias):
         # Encontramos los nombres exactos de las columnas más críticas usando tus ALIASES
         col_fecha = next((c for c in df.columns for a in ALIASES['fecha'] if a.lower() in c.lower()), None)
         col_hora = next((c for c in df.columns for a in ALIASES['hora'] if a.lower() in c.lower()), None)
@@ -106,7 +104,7 @@ def procesar_archivo_a_objetos(ruta_archivo):
                                 pass
             return tipo_dato() if tipo_dato != str else ""
 
-        # --- LÓGICA DE AGRUPACIÓN SECUENCIAL ---
+        # Lógica de agrupación secuencial 
         pacientes_creados = []
         paciente_actual = None
         ultima_clave_tiempo = None
